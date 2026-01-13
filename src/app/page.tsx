@@ -4,23 +4,53 @@ import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { typography } from "@qanda/qds4-web/Typography";
 import { COLOR } from "@qanda/qds4-web/base.ts";
-import { DropZone } from "@/components/upload";
+import { DropZone, UrlInput } from "@/components/upload";
 
 export default function Home() {
   const router = useRouter();
 
+  // Handle PDF file upload (F-001)
   const handleFileSelect = useCallback(
     async (file: File) => {
-      // TODO: TASK-004에서 실제 업로드 API 연동 예정
-      // 현재는 파일 선택만 처리하고 콘솔에 로그 출력
-      console.log("File selected:", file.name, file.size, file.type);
+      const formData = new FormData();
+      formData.append("file", file);
 
-      // 임시: 업로드 시뮬레이션 (2초 딜레이)
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const response = await fetch("/api/papers", {
+        method: "POST",
+        body: formData,
+      });
 
-      // TODO: 실제 구현 시 반환된 paper ID로 라우팅
-      // router.push(`/paper/${paperId}`);
-      alert(`파일 업로드 완료: ${file.name}\n(TASK-004에서 실제 API 연동 예정)`);
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error?.message || "업로드에 실패했습니다.");
+      }
+
+      // 업로드 성공 시 논문 뷰어 페이지로 이동
+      router.push(`/paper/${result.id}`);
+    },
+    [router]
+  );
+
+  // Handle URL submission (F-002)
+  const handleUrlSubmit = useCallback(
+    async (url: string) => {
+      const response = await fetch("/api/papers/url", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error?.code || result.error?.message || "다운로드에 실패했습니다.");
+      }
+
+      // 다운로드 성공 시 논문 뷰어 페이지로 이동
+      router.push(`/paper/${result.id}`);
     },
     [router]
   );
@@ -65,10 +95,45 @@ export default function Home() {
         <DropZone onFileSelect={handleFileSelect} />
       </section>
 
-      {/* URL Input - TODO: TASK-006에서 구현 예정 */}
-      {/* <section style={{ marginTop: "24px" }}>
-        <Button variant="accent">URL로 논문 불러오기</Button>
-      </section> */}
+      {/* Divider with "or" text */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          width: "100%",
+          maxWidth: "500px",
+          margin: "24px 0",
+        }}
+      >
+        <div
+          style={{
+            flex: 1,
+            height: "1px",
+            backgroundColor: COLOR.gray_80,
+          }}
+        />
+        <span
+          className={typography("body_2")}
+          style={{
+            color: COLOR.gray_50,
+            padding: "0 16px",
+          }}
+        >
+          또는
+        </span>
+        <div
+          style={{
+            flex: 1,
+            height: "1px",
+            backgroundColor: COLOR.gray_80,
+          }}
+        />
+      </div>
+
+      {/* URL Input - ui-spec.yaml#SCR-001.components.url_input */}
+      <section style={{ width: "100%", maxWidth: "500px" }}>
+        <UrlInput onSubmit={handleUrlSubmit} />
+      </section>
     </div>
   );
 }

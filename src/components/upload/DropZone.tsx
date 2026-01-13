@@ -55,8 +55,13 @@ export function DropZone({
   // Validate file according to functional-spec.yaml#F-001
   const validateFile = useCallback(
     (file: File): ErrorCode | null => {
-      // Check file type
-      if (!acceptedTypes.includes(file.type)) {
+      // Check file type - MIME type check with extension fallback
+      // Some browsers may not correctly detect MIME type for files with
+      // special characters in filename or via drag-and-drop
+      const isPdfByMime = acceptedTypes.includes(file.type);
+      const isPdfByExtension = file.name.toLowerCase().endsWith(".pdf");
+
+      if (!isPdfByMime && !isPdfByExtension) {
         return "INVALID_FILE_TYPE";
       }
       // Check file size

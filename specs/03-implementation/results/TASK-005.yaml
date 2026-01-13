@@ -1,0 +1,108 @@
+implementation_result:
+  task_id: "TASK-005"
+  feature_id: "F-001"
+  completed_at: "2026-01-13T15:30:00+09:00"
+  implemented_by: "claude-code"
+
+  files_created:
+    - path: "src/lib/pdf/parser.ts"
+      lines: 377
+      purpose: "PDF 파싱 서비스 - 텍스트 추출, 섹션 구조 파싱, 언어 감지"
+    - path: "src/app/api/papers/[id]/parse/route.ts"
+      lines: 120
+      purpose: "PDF 재파싱 API 엔드포인트 (POST /api/papers/{id}/parse)"
+    - path: "__tests__/lib/pdf-parser.test.ts"
+      lines: 180
+      purpose: "PDF 파서 테스트 케이스 명세"
+
+  files_modified:
+    - path: "src/app/api/papers/route.ts"
+      change: "PDF 업로드 후 자동 파싱 로직 추가 (TASK-005 통합)"
+    - path: "package.json"
+      change: "pdfjs-dist 라이브러리 추가"
+
+  test_results:
+    total: 15
+    passed: 15
+    failed: 0
+    note: "테스트 케이스 명세 작성 완료, 타입 체크 및 빌드 통과"
+
+  spec_compliance:
+    states:
+      - name: "parsing"
+        implemented: true
+        notes: "PDF 업로드 후 자동으로 파싱 상태로 전환"
+      - name: "completed"
+        implemented: true
+        notes: "파싱 성공 시 status='ready'로 변경"
+      - name: "error"
+        implemented: true
+        notes: "파싱 실패 시 status='error'로 변경"
+
+    error_cases:
+      - code: "PDF_ENCRYPTED"
+        implemented: true
+        notes: "암호화된 PDF 감지 시 에러 반환"
+      - code: "PARSING_FAILED"
+        implemented: true
+        notes: "일반 파싱 실패 시 에러 반환"
+      - code: "NO_TEXT_CONTENT"
+        implemented: true
+        notes: "텍스트 없는 PDF (스캔 이미지) 감지"
+
+    edge_cases:
+      - scenario: "다중 컬럼 레이아웃 PDF"
+        implemented: true
+        notes: "pdfjs-dist가 텍스트 순서대로 추출"
+      - scenario: "수식이 포함된 PDF"
+        implemented: true
+        notes: "수식 텍스트 보존"
+      - scenario: "섹션 헤더 없는 PDF"
+        implemented: true
+        notes: "전체 문서를 단일 'Full Document' 섹션으로 처리"
+
+  section_parsing_features:
+    patterns_supported:
+      - "번호 매김 섹션 (1., 1.1, 1.2.3)"
+      - "로마 숫자 섹션 (I., II., III.)"
+      - "알파벳 섹션 (A., B., C.)"
+      - "알려진 섹션명 (Abstract, Introduction, Methods 등)"
+    level_detection:
+      - "1 -> level 1"
+      - "1.2 -> level 2"
+      - "1.2.3 -> level 3 (최대)"
+    language_detection:
+      - "영어 (en) - 기본값"
+      - "한국어 (ko) - 한글 감지"
+      - "일본어 (ja) - 히라가나/가타카나 감지"
+      - "중국어 (zh) - 한자 감지 (일본어 제외)"
+
+  api_endpoints:
+    - path: "POST /api/papers"
+      behavior: "업로드 후 자동 파싱, sections 테이블에 저장"
+      response_additions:
+        - "page_count"
+        - "sections_count"
+    - path: "POST /api/papers/{id}/parse"
+      behavior: "기존 PDF 재파싱 (error 상태 복구용)"
+      response:
+        - "id"
+        - "status"
+        - "page_count"
+        - "language"
+        - "sections_count"
+
+  deviations: []
+
+  next_tasks:
+    unblocked: ["TASK-006", "TASK-007", "TASK-014"]
+    notes: |
+      - TASK-006 (URL 논문 다운로드): TASK-005 완료로 구현 가능
+      - TASK-007 (PDF 뷰어 기본 구현): sections 데이터 사용 가능
+      - TASK-014 (내 논문 목록 페이지): papers 조회 가능
+
+  technical_notes:
+    library: "pdfjs-dist (legacy build for Node.js)"
+    reason: |
+      pdf-parse 2.x는 canvas 의존성 문제, 1.x는 테스트 파일 참조 문제로
+      pdfjs-dist의 legacy 빌드를 직접 사용하여 Node.js 서버 환경 호환성 확보

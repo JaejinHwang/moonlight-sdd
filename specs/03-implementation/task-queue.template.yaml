@@ -4,49 +4,96 @@
 # ============================================================
 # 사용법: /implement TASK-001 명령으로 순차 실행
 # ============================================================
+#
+# ⚠️  중요: 프론트엔드/백엔드 연동 규칙
+# ============================================================
+# 1. frontend 태스크에서 TODO/placeholder를 만들면:
+#    → 연동할 backend 태스크의 integration_required에 명시
+#    → backend 태스크 완료 시 프론트엔드 연동까지 포함
+#
+# 2. backend 태스크에서 API를 만들면:
+#    → 해당 API를 사용할 frontend의 TODO를 실제 코드로 교체
+#    → integration_required.frontend_files에 수정 대상 명시
+#
+# 3. fullstack 태스크는 프론트엔드/백엔드를 한 번에 구현
+#    → 연동 누락 위험 없음 (권장)
+# ============================================================
 
 task_queue:
   - id: "TASK-001"
     feature_id: "F-001"  # functional-spec의 기능 ID
     name: "{{task_name}}"
     description: "{{task_description}}"
-    
+
     # 작업 유형
     type: "{{frontend|backend|fullstack|infra}}"
-    
+
     # 우선순위 (낮을수록 먼저)
     priority: 1
-    
+
     # 선행 작업 (이 작업들이 완료되어야 시작 가능)
     dependencies: []  # 예: ["TASK-002", "TASK-003"]
-    
+
     # 현재 상태
     status: "pending"  # pending | in_progress | completed | blocked
-    
+
     # 관련 스펙 파일 참조 (Agent가 읽을 파일들)
     spec_refs:
       functional: "specs/02-specification/functional-spec.yaml#F-001"
       technical: "specs/02-specification/technical-spec.yaml#api_spec.endpoints[0]"
       ui: "specs/02-specification/ui-spec.yaml#SCR-001"
       design_system: "templates/design-system/qds4-web.yaml"  # UI 작업 시 필수 참조
-    
+
+    # ⚠️ 연동 요구사항 (프론트엔드/백엔드 분리 시 필수)
+    # 이 섹션이 있으면 태스크 완료 전 반드시 연동 작업 수행
+    integration_required:
+      # backend 태스크인 경우: 연동해야 할 프론트엔드 파일
+      frontend_files: []  # 예: ["src/app/page.tsx#handleFileSelect"]
+      # frontend 태스크인 경우: 나중에 연동될 백엔드 태스크
+      pending_backend: null  # 예: "TASK-004" (해당 태스크에서 연동 책임)
+      # 연동 완료 여부 체크리스트
+      checklist:
+        - "TODO/placeholder 코드가 실제 구현으로 교체되었는가?"
+        - "임시 alert/console.log가 제거되었는가?"
+        - "에러 핸들링이 실제 API 응답에 맞게 구현되었는가?"
+
     # 인수 조건 (requirements.yaml에서 복사)
     acceptance_criteria:
       - "Given {{precondition}}, When {{action}}, Then {{result}}"
-    
+
     # 예상 산출물
     expected_outputs:
       - path: "src/{{path}}"
         type: "{{component|api|lib|test}}"
-    
+
     # 예상 복잡도 (AI 토큰 사용량 추정용)
     estimated_complexity: "{{low|medium|high}}"
 
-  # 추가 태스크 템플릿
-  # - id: "TASK-002"
-  #   feature_id: "F-001"
-  #   name: "{{task_name}}"
-  #   ...
+  # ============================================================
+  # 예시: 프론트엔드/백엔드 분리 태스크
+  # ============================================================
+  # - id: "TASK-003"
+  #   name: "파일 업로드 UI"
+  #   type: "frontend"
+  #   integration_required:
+  #     pending_backend: "TASK-004"  # TASK-004에서 연동 책임
+  #   expected_outputs:
+  #     - path: "src/app/page.tsx"
+  #       type: "component"
+  #       note: "handleFileSelect에 TODO 포함 - TASK-004에서 교체"
+  #
+  # - id: "TASK-004"
+  #   name: "파일 업로드 API"
+  #   type: "backend"
+  #   dependencies: ["TASK-003"]
+  #   integration_required:
+  #     frontend_files:
+  #       - "src/app/page.tsx#handleFileSelect"  # TODO를 실제 API 호출로 교체
+  #     checklist:
+  #       - "page.tsx의 TODO 주석을 fetch('/api/papers')로 교체"
+  #       - "임시 alert 제거하고 실제 응답 처리"
+  #       - "업로드 실패 시 에러 메시지 표시"
+  # ============================================================
 
 # ============================================================
 # 메타데이터

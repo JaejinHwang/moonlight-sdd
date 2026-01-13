@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { parsePdf } from "@/lib/pdf/parser";
 import type { Database } from "@/types/database";
 
 // Constants from functional-spec.yaml#F-001
@@ -150,13 +151,74 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 10. Return success response (technical-spec.yaml#api_spec.endpoints[0].response.success)
+  // 10. Parse PDF and extract sections (TASK-005)
+  // This implements the 'parsing' state from functional-spec.yaml#F-001
+  const parseResult = await parsePdf(fileBuffer);
+
+  if (!parseResult.success) {
+    // Update paper status to 'error'
+    await supabase.from("papers").update({ status: "error" }).eq("id", paper.id);
+
+    // Don't fail the upload - the file is saved, parsing failed
+    // User can retry parsing later or re-upload
+    console.error("PDF parsing error:", parseResult.error);
+    return NextResponse.json(
+      {
+        id: paper.id,
+        title: paper.title,
+        status: "error",
+        created_at: paper.created_at,
+        error: parseResult.error,
+      },
+      { status: 201 } // Still 201 because upload succeeded
+    );
+  }
+
+  // 11. Save sections to database
+  type SectionInsert = Database["public"]["Tables"]["sections"]["Insert"];
+  const sectionsToInsert: SectionInsert[] = parseResult.sections.map((section) => ({
+    paper_id: paper.id,
+    title: section.title,
+    level: section.level,
+    order_index: section.orderIndex,
+    content: section.content,
+    page_start: section.pageStart,
+    page_end: section.pageEnd,
+  }));
+
+  const { error: sectionsError } = await supabase.from("sections").insert(sectionsToInsert);
+
+  if (sectionsError) {
+    console.error("Sections insert error:", sectionsError);
+    // Don't fail - file is uploaded, sections failed to save
+    await supabase.from("papers").update({ status: "error" }).eq("id", paper.id);
+  }
+
+  // 12. Update paper with parsed metadata
+  const finalStatus = sectionsError ? "error" : "ready";
+  const { error: updateError } = await supabase
+    .from("papers")
+    .update({
+      page_count: parseResult.pageCount,
+      language: parseResult.metadata.language,
+      status: finalStatus,
+      ...(parseResult.metadata.title && { title: parseResult.metadata.title }),
+    })
+    .eq("id", paper.id);
+
+  if (updateError) {
+    console.error("Paper update error:", updateError);
+  }
+
+  // 13. Return success response (technical-spec.yaml#api_spec.endpoints[0].response.success)
   return NextResponse.json(
     {
       id: paper.id,
-      title: paper.title,
-      status: paper.status,
+      title: parseResult.metadata.title || paper.title,
+      status: finalStatus,
       created_at: paper.created_at,
+      page_count: parseResult.pageCount,
+      sections_count: parseResult.sections.length,
     },
     { status: 201 }
   );

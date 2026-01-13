@@ -1,0 +1,175 @@
+# ============================================================
+# Tech Stack Preset: Next.js + Supabase
+# 풀스택 웹앱에 적합한 기본 구성
+# ============================================================
+
+preset:
+  name: "nextjs-supabase"
+  description: "Next.js 14 + Supabase + Claude API 기반 풀스택"
+  version: "1.0.0"
+  
+  # 적합한 프로젝트 유형
+  suitable_for:
+    - "SaaS 웹앱"
+    - "AI 기반 서비스"
+    - "MVP/PoC 빠른 개발"
+    - "1인 개발"
+
+# ============================================================
+# 기술 스택 상세
+# ============================================================
+stack:
+  # 프론트엔드
+  frontend:
+    framework: "Next.js"
+    version: "14.x"
+    language: "TypeScript"
+    styling: "Tailwind CSS"
+    ui_components: "shadcn/ui"
+    state_management: "Zustand"
+    
+  # 백엔드
+  backend:
+    runtime: "Next.js API Routes"
+    api_style: "REST"
+    validation: "Zod"
+    
+  # 데이터베이스
+  database:
+    provider: "Supabase"
+    type: "PostgreSQL"
+    orm: "Supabase Client"
+    
+  # 인증
+  auth:
+    provider: "Supabase Auth"
+    methods:
+      - "email"
+      - "google"
+      - "github"
+      
+  # AI
+  ai:
+    provider: "Anthropic"
+    model: "claude-sonnet-4-20250514"
+    sdk: "@anthropic-ai/sdk"
+    
+  # 인프라
+  infrastructure:
+    hosting: "Vercel"
+    storage: "Supabase Storage"
+    
+  # 개발 도구
+  dev_tools:
+    package_manager: "pnpm"
+    linter: "ESLint"
+    formatter: "Prettier"
+    testing: "Jest + React Testing Library"
+
+# ============================================================
+# 프로젝트 구조
+# ============================================================
+directory_structure:
+  src:
+    app:
+      - "(auth)/"
+      - "(main)/"
+      - "api/"
+      - "layout.tsx"
+      - "page.tsx"
+    components:
+      - "ui/"
+      - "features/"
+    lib:
+      - "supabase/"
+      - "ai/"
+      - "utils/"
+    hooks: []
+    types: []
+  specs:
+    - "01-discovery/"
+    - "02-specification/"
+    - "03-implementation/"
+  tests:
+    - "unit/"
+    - "integration/"
+    - "e2e/"
+  public: []
+
+# ============================================================
+# 기본 의존성
+# ============================================================
+dependencies:
+  production:
+    next: "^14.0.0"
+    react: "^18.0.0"
+    react-dom: "^18.0.0"
+    "@supabase/supabase-js": "^2.0.0"
+    "@anthropic-ai/sdk": "^0.24.0"
+    zustand: "^4.0.0"
+    zod: "^3.0.0"
+    tailwindcss: "^3.0.0"
+    "lucide-react": "^0.300.0"
+    
+  development:
+    typescript: "^5.0.0"
+    "@types/node": "^20.0.0"
+    "@types/react": "^18.0.0"
+    eslint: "^8.0.0"
+    prettier: "^3.0.0"
+    jest: "^29.0.0"
+    "@testing-library/react": "^14.0.0"
+
+# ============================================================
+# 기본 아키텍처 다이어그램 (technical-spec용)
+# ============================================================
+architecture_diagram: |
+  flowchart TB
+    subgraph Client["Client (Browser)"]
+      NextApp[Next.js App]
+      Components[React Components]
+    end
+    
+    subgraph Vercel["Vercel"]
+      API[API Routes]
+      SSR[SSR/SSG]
+    end
+    
+    subgraph External["External Services"]
+      Supabase[(Supabase)]
+      Claude[Claude API]
+    end
+    
+    NextApp --> Components
+    Components --> API
+    API --> Supabase
+    API --> Claude
+    SSR --> Supabase
+
+# ============================================================
+# 환경 변수 템플릿
+# ============================================================
+env_template:
+  NEXT_PUBLIC_SUPABASE_URL: "your-supabase-url"
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: "your-anon-key"
+  SUPABASE_SERVICE_ROLE_KEY: "your-service-role-key"
+  ANTHROPIC_API_KEY: "your-anthropic-key"
+
+# ============================================================
+# 기본 ADR (이 스택을 선택한 이유)
+# ============================================================
+default_adrs:
+  - id: "ADR-001"
+    title: "프레임워크 선택: Next.js"
+    decision: "Next.js 14 (App Router)"
+    reason: "SSR/SSG 지원, API Routes 내장, Vercel 최적화"
+    
+  - id: "ADR-002"
+    title: "데이터베이스 선택: Supabase"
+    decision: "Supabase (PostgreSQL)"
+    reason: "무료 티어, 인증 내장, 실시간 구독, 빠른 설정"
+    
+  - id: "ADR-003"
+    title: "AI 모델 선택: Claude"
+    decision: "Claude claude-sonnet-4-20250514"
+    reason: "긴 컨텍스트, 비용 효율, 코드/문서 품질"

@@ -1,0 +1,63 @@
+# ============================================================
+# Requirements (요구사항)
+# Stage 3: 구현해야 할 것들을 우선순위와 함께 정의
+# ============================================================
+# 의존성: problem-definition.yaml 완성 후 작성
+# ============================================================
+
+requirements:
+  # 사용자 스토리 목록
+  # 형식: "As a [user], I want [goal] so that [benefit]"
+  user_stories:
+    - id: "US-001"
+      as_a: "{{user_type}}"
+      i_want: "{{user_goal}}"
+      so_that: "{{user_benefit}}"
+      priority: "must"  # must | should | could | wont
+      # 인수 조건: Given-When-Then 형식 필수
+      acceptance_criteria:
+        - "Given {{precondition}}, When {{action}}, Then {{expected_result}}"
+        - "Given {{precondition_2}}, When {{action_2}}, Then {{expected_result_2}}"
+    
+    # 추가 스토리 템플릿
+    # - id: "US-002"
+    #   as_a: "{{user_type}}"
+    #   i_want: "{{user_goal}}"
+    #   so_that: "{{user_benefit}}"
+    #   priority: "should"
+    #   acceptance_criteria:
+    #     - "Given ..., When ..., Then ..."
+
+  # 비기능 요구사항
+  non_functional:
+    performance:
+      - requirement: "{{performance_requirement}}"
+        threshold: "{{performance_threshold}}"  # 예: "응답시간 500ms 이내"
+    security:
+      - requirement: "{{security_requirement}}"
+    accessibility:
+      - requirement: "{{accessibility_requirement}}"  # 예: "WCAG 2.1 AA 준수"
+
+  # 제약 조건
+  constraints:
+    technical:
+      - "{{technical_constraint}}"  # 예: "React/Next.js 기반"
+      - "@qanda/qds4-web 디자인 시스템 사용 필수"
+    business:
+      - "{{business_constraint}}"  # 예: "MVP 4주 내 완성"
+    legal:
+      - "{{legal_constraint}}"  # 예: "GDPR 준수 필요"
+    design:
+      - "UI 컴포넌트는 QDS4만 사용 (shadcn/ui 등 금지)"
+      - "색상/타이포그래피는 QDS4 토큰만 사용"
+
+# ============================================================
+# 메타데이터
+# ============================================================
+metadata:
+  created_at: "{{created_at}}"
+  author: "{{author}}"
+  status: "draft"
+  depends_on:
+    - "idea-crystal.yaml"
+    - "problem-definition.yaml"

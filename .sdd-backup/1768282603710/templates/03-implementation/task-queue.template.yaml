@@ -1,0 +1,58 @@
+# ============================================================
+# Task Queue (구현 태스크 대기열)
+# functional-spec의 각 기능을 구현 가능한 단위로 분해
+# ============================================================
+# 사용법: /implement TASK-001 명령으로 순차 실행
+# ============================================================
+
+task_queue:
+  - id: "TASK-001"
+    feature_id: "F-001"  # functional-spec의 기능 ID
+    name: "{{task_name}}"
+    description: "{{task_description}}"
+    
+    # 작업 유형
+    type: "{{frontend|backend|fullstack|infra}}"
+    
+    # 우선순위 (낮을수록 먼저)
+    priority: 1
+    
+    # 선행 작업 (이 작업들이 완료되어야 시작 가능)
+    dependencies: []  # 예: ["TASK-002", "TASK-003"]
+    
+    # 현재 상태
+    status: "pending"  # pending | in_progress | completed | blocked
+    
+    # 관련 스펙 파일 참조 (Agent가 읽을 파일들)
+    spec_refs:
+      functional: "specs/02-specification/functional-spec.yaml#F-001"
+      technical: "specs/02-specification/technical-spec.yaml#api_spec.endpoints[0]"
+      ui: "specs/02-specification/ui-spec.yaml#SCR-001"
+    
+    # 인수 조건 (requirements.yaml에서 복사)
+    acceptance_criteria:
+      - "Given {{precondition}}, When {{action}}, Then {{result}}"
+    
+    # 예상 산출물
+    expected_outputs:
+      - path: "src/{{path}}"
+        type: "{{component|api|lib|test}}"
+    
+    # 예상 복잡도 (AI 토큰 사용량 추정용)
+    estimated_complexity: "{{low|medium|high}}"
+
+  # 추가 태스크 템플릿
+  # - id: "TASK-002"
+  #   feature_id: "F-001"
+  #   name: "{{task_name}}"
+  #   ...
+
+# ============================================================
+# 메타데이터
+# ============================================================
+metadata:
+  created_at: "{{created_at}}"
+  last_updated: "{{last_updated}}"
+  total_tasks: 0
+  completed_tasks: 0
+  completion_rate: "0%"

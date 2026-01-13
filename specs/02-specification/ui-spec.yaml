@@ -1,0 +1,623 @@
+# ============================================================
+# UI/UX Specification (UI 명세)
+# Stage 6: 화면 구성과 인터랙션 정의
+# ============================================================
+# 의존성: functional-spec.yaml 기반으로 작성
+# ============================================================
+# 중요: UI 구현 시 반드시 @qanda/qds4-web 디자인 시스템만 사용
+# 레퍼런스: templates/design-system/qds4-web.yaml
+# 공식 문서: https://github.com/mathpresso/qanda-design-system-docs
+# 데모 페이지: https://mathpresso.github.io/qanda-design-system-docs
+# ============================================================
+
+ui_spec:
+  # ----------------------------------------------------------
+  # 디자인 시스템 (Design System)
+  # ----------------------------------------------------------
+  # 반드시 @qanda/qds4-web 컴포넌트와 토큰만 사용
+  # ----------------------------------------------------------
+  design_system:
+    package: "@qanda/qds4-web"
+    version: "^0.0.2"
+    reference: "templates/design-system/qds4-web.yaml"
+
+    # 사용 가능한 색상 팔레트 (COLOR 토큰 사용 필수)
+    # 전체 목록: gray, blue, orange, red, yellow, green (각 _0 ~ _100 또는 _5 ~ _95)
+    color_palette:
+      primary: "blue_50"       # 주요 액션, 링크
+      secondary: "gray_60"     # 보조 텍스트
+      error: "red_50"          # 에러 상태
+      warning: "orange_50"     # 경고 상태
+      success: "green_50"      # 성공 상태
+      background: "gray_100"   # 기본 배경
+      surface: "gray_95"       # 카드/섹션 배경
+      text_primary: "gray_10"  # 주요 텍스트
+      text_secondary: "gray_50" # 보조 텍스트
+      highlight: "yellow_20"   # 하이라이트
+
+    # 사용 가능한 타이포그래피 (typography() 함수 사용 필수)
+    typography_scale:
+      - "large_title"      # 페이지 메인 타이틀
+      - "title_1_strong"   # 강조 주요 제목
+      - "title_1"          # 주요 섹션 제목
+      - "title_2_strong"   # 강조 서브 제목
+      - "title_2"          # 서브 섹션 제목
+      - "title_3_strong"   # 강조 소제목
+      - "title_3"          # 소제목
+      - "body_1_strong"    # 강조 본문
+      - "body_1"           # 기본 본문
+      - "body_2_strong"    # 강조 작은 본문
+      - "body_2"           # 작은 본문
+      - "caption_1"        # 캡션
+      - "caption_2"        # 작은 캡션
+
+    # 사용 가능한 브레이크포인트 (BREAKPOINT 상수 사용)
+    breakpoints:
+      SMALL: "360px"        # 모바일
+      MEDIUM: "640px"       # 태블릿
+      LARGE: "1200px"       # 데스크톱
+      EXTRA_LARGE: "1600px" # 대형 화면
+
+    # 사용 가능한 컴포넌트 목록
+    # 상세 props는 qds4-web.yaml 참조
+    allowed_components:
+      buttons:
+        - "Button"           # variant: neutral|accent|danger|tonal|outlined, size: l|m|s|xs
+        - "TextButton"       # size: m|s
+        - "IconButton"       # style: clear|border, iconSize: 24|20|16
+        - "FloatingActionButton"  # color: neutral|accent
+      forms:
+        - "Checkbox"         # state: unselected|indeterminate|selected
+        - "Checkmark"        # checked: boolean
+        - "Radio"            # selectedValue matching
+        - "Switch"           # checked: boolean
+      navigation:
+        - "TopAppBar"        # main, leading, trailing
+        - "Tabs"             # type: scrollable|fixed, size: m|s
+        - "SegmentedControl" # size: m|s
+      dialogs:
+        - "AlertDialog"      # confirmButton, cancelButton
+        - "StandardDialog"   # size: s|m|l
+        - "FullScreenDialog" # isOpen, onClose
+        - "BottomSheet"      # title, footer
+      feedback:
+        - "Spinner"          # size: number
+        - "LoadingAnimation" # size: number
+        - "Badge"            # size: s|m, type: new|digit
+        - "Tag"              # color: gray|blue|orange|red|yellow|green, style: filled|tonal
+      layout:
+        - "BottomFixedArea"  # position: sticky|fixed
+        - "Divider"          # 구분선
+      utilities:
+        - "Icon"             # size, color
+        - "Typography"       # typography() 함수
+        - "Shadow"           # shadow(1|2) 함수
+        - "StateLayer"       # stateLayer() 함수
+        - "DesignSystemProvider"  # 앱 루트 필수
+
+  # ----------------------------------------------------------
+  # 화면 목록 (Screens)
+  # ----------------------------------------------------------
+  screens:
+    # ========================================
+    # SCR-001: 랜딩/업로드 페이지
+    # ========================================
+    - id: "SCR-001"
+      name: "랜딩/업로드 페이지"
+      route: "/"
+      description: "서비스 소개 및 논문 업로드 진입점"
+      implements_features: ["F-001", "F-002"]
+
+      layout: |
+        +------------------------------------------+
+        |  TopAppBar (Logo, Auth)                  |
+        +------------------------------------------+
+        |                                          |
+        |          Hero Section                    |
+        |     "논문 읽기를 더 쉽게"                  |
+        |     (Typography: large_title)            |
+        |                                          |
+        +------------------------------------------+
+        |                                          |
+        |      +------------------------+          |
+        |      |                        |          |
+        |      |    Drop Zone           |          |
+        |      |    (PDF 업로드)         |          |
+        |      |                        |          |
+        |      +------------------------+          |
+        |                                          |
+        |      [ URL로 논문 불러오기 ]              |
+        |      (Button: variant=accent)            |
+        |                                          |
+        +------------------------------------------+
+        |  Footer                                  |
+        +------------------------------------------+
+
+      components:
+        # QDS: TopAppBar 사용
+        - id: "header"
+          type: "TopAppBar"
+          description: "상단 네비게이션 바"
+          props:
+            main: "ReactNode"        # 로고
+            leading: "ReactNode"     # 뒤로가기 (없음)
+            trailing: "ReactNode"    # 로그인/프로필 버튼
+          states:
+            - name: "logged_out"
+              appearance: "trailing에 로그인 Button(variant=outlined) 표시"
+              behavior: "클릭 시 인증 모달 열림"
+            - name: "logged_in"
+              appearance: "trailing에 사용자 아바타 IconButton 표시"
+              behavior: "클릭 시 BottomSheet로 메뉴 표시"
+
+        # 커스텀 컴포넌트 (QDS 기반 조합)
+        - id: "hero_section"
+          type: "CustomComponent"
+          qds_components_used: ["Typography"]
+          description: "서비스 소개 및 가치 제안"
+          props:
+            title: "string"
+            subtitle: "string"
+          states:
+            - name: "default"
+              appearance: "Typography(large_title)로 타이틀, Typography(body_1)로 부제목"
+              behavior: null
+
+        # 커스텀 컴포넌트 (QDS 기반 조합)
+        - id: "upload_dropzone"
+          type: "CustomComponent"
+          qds_components_used: ["Button", "Icon", "Typography", "Spinner", "Tag"]
+          description: "PDF 파일 드래그앤드롭 영역"
+          props:
+            acceptedTypes: "string[]"
+            maxSize: "number"
+          states:
+            - name: "idle"
+              appearance: "점선 테두리(gray_60), Icon(upload), Typography(body_1) 안내 텍스트"
+              behavior: "클릭 시 파일 선택 다이얼로그"
+            - name: "drag_over"
+              appearance: "테두리 색상 blue_50, 배경색 blue_95"
+              behavior: "드롭 대기"
+            - name: "uploading"
+              appearance: "Spinner 표시, Typography(body_2)로 파일명"
+              behavior: "업로드 진행률 표시"
+            - name: "error"
+              appearance: "테두리 red_50, Tag(color=red, style=tonal)로 에러 메시지"
+              behavior: "Button(variant=outlined)로 재시도"
+
+        # 커스텀 컴포넌트 (QDS 기반 조합)
+        - id: "url_input"
+          type: "CustomComponent"
+          qds_components_used: ["Button", "Spinner", "Typography"]
+          description: "논문 URL 입력 필드 (input은 네이티브 HTML, 버튼은 QDS)"
+          props:
+            placeholder: "string"
+          states:
+            - name: "idle"
+              appearance: "input 필드 + Button(variant=accent) 제출 버튼"
+              behavior: "URL 입력 대기"
+            - name: "loading"
+              appearance: "Button 내 Spinner 표시"
+              behavior: "다운로드 진행 중"
+            - name: "error"
+              appearance: "Typography(caption_1, color=red_50)로 에러 메시지"
+              behavior: "재시도 가능"
+
+      interactions:
+        - trigger: "PDF 파일 드롭"
+          action: "파일 업로드 시작"
+          feedback: "Spinner 표시, 완료 시 뷰어로 이동"
+        - trigger: "URL 입력 후 엔터 또는 버튼 클릭"
+          action: "논문 다운로드 시작"
+          feedback: "Button 내 LoadingAnimation, 완료 시 뷰어로 이동"
+        - trigger: "로그인 버튼 클릭"
+          action: "인증 StandardDialog 열기"
+          feedback: "StandardDialog(size=m) 애니메이션"
+
+      responsive:
+        mobile: "SMALL 브레이크포인트, 세로 스택, 드롭존 터치 최적화"
+        tablet: "MEDIUM 브레이크포인트, 드롭존 중앙 정렬"
+        desktop: "LARGE 브레이크포인트, 넓은 드롭존, 좌우 여백"
+
+      accessibility:
+        focus_order: ["header", "upload_dropzone", "url_input"]
+        aria_labels:
+          upload_dropzone: "PDF 파일 업로드 영역"
+          url_input: "논문 URL 입력"
+
+    # ========================================
+    # SCR-002: 논문 뷰어 페이지
+    # ========================================
+    - id: "SCR-002"
+      name: "논문 뷰어 페이지"
+      route: "/paper/{id}"
+      description: "논문 읽기 및 AI 기능 사용 메인 화면"
+      implements_features: ["F-003", "F-004", "F-005", "F-006", "F-007", "F-008"]
+
+      layout: |
+        +------------------------------------------+
+        |  TopAppBar (Logo, Paper Title, Actions)  |
+        +------------------------------------------+
+        |  Toolbar (SegmentedControl + Switch)     |
+        +------+---------------------------+-------+
+        |      |                           |       |
+        | TOC  |      PDF Viewer           | Side  |
+        | 목차  |      (본문 영역)           | Panel |
+        |      |                           | 요약   |
+        |      |                           | 키워드 |
+        |      |                           |       |
+        +------+---------------------------+-------+
+
+      components:
+        # QDS: TopAppBar 사용
+        - id: "viewer_header"
+          type: "TopAppBar"
+          description: "뷰어 상단 헤더"
+          props:
+            main: "ReactNode"        # 논문 제목 (Typography)
+            leading: "ReactNode"     # IconButton(뒤로가기)
+            trailing: "ReactNode"    # 액션 버튼들
+          states:
+            - name: "default"
+              appearance: "leading에 IconButton(back), main에 Typography(title_2), trailing에 IconButton(share, more)"
+              behavior: null
+
+        # 커스텀 컴포넌트 (QDS 기반 조합)
+        - id: "toolbar"
+          type: "CustomComponent"
+          qds_components_used: ["SegmentedControl", "Switch", "Spinner", "IconButton"]
+          description: "AI 기능 토글 및 설정 툴바"
+          props:
+            features: "string[]"
+          states:
+            - name: "default"
+              appearance: "Switch로 번역/하이라이트 토글, SegmentedControl로 요약/키워드 탭 전환"
+              behavior: "각 기능 on/off"
+            - name: "processing"
+              appearance: "처리 중인 Switch 옆에 Spinner(size=16) 표시"
+              behavior: "해당 Switch disabled 상태"
+
+        # 커스텀 컴포넌트 (QDS 기반 조합)
+        - id: "toc_sidebar"
+          type: "CustomComponent"
+          qds_components_used: ["Typography", "IconButton", "Divider", "StateLayer"]
+          description: "논문 목차 사이드바"
+          props:
+            sections: "Section[]"
+            activeSection: "string"
+          states:
+            - name: "expanded"
+              appearance: "Typography(body_2)로 목차 항목, 현재 섹션에 StateLayer(blue_50) 하이라이트"
+              behavior: "섹션 클릭 시 스크롤"
+            - name: "collapsed"
+              appearance: "IconButton(menu)만 표시"
+              behavior: "클릭 시 펼침"
+
+        # 커스텀 컴포넌트 (QDS 기반 조합)
+        - id: "pdf_viewer"
+          type: "CustomComponent"
+          qds_components_used: ["Typography", "LoadingAnimation", "Tag"]
+          description: "논문 본문 뷰어"
+          props:
+            paper: "Paper"
+            highlights: "Highlight[]"
+            translation: "Translation | null"
+          states:
+            - name: "loading"
+              appearance: "LoadingAnimation(size=48) 중앙 표시, 스켈레톤 UI"
+              behavior: "로딩 중"
+            - name: "ready"
+              appearance: "Typography 기반 텍스트 렌더링, 이미지, 수식"
+              behavior: "스크롤, 선택 가능"
+            - name: "translated"
+              appearance: "번역문 Typography(body_1), 원문은 Typography(body_2, gray_50)"
+              behavior: "원문/번역 전환"
+            - name: "highlighted"
+              appearance: "핵심 문장에 yellow_20 배경색 적용"
+              behavior: "하이라이트 hover 시 BottomSheet로 이유 표시"
+
+        # 커스텀 컴포넌트 (QDS 기반 조합)
+        - id: "side_panel"
+          type: "CustomComponent"
+          qds_components_used: ["Tabs", "Typography", "Tag", "TextButton", "Divider"]
+          description: "요약/키워드 사이드 패널"
+          props:
+            summary: "Summary | null"
+            keywords: "Keyword[]"
+          states:
+            - name: "summary_view"
+              appearance: "Tabs(size=s)로 전환, Typography(body_1)로 요약 내용, 아코디언 형태"
+              behavior: "섹션 TextButton 클릭 시 해당 위치로 스크롤"
+            - name: "keywords_view"
+              appearance: "Tag(style=tonal) 리스트로 키워드 표시"
+              behavior: "Tag 클릭 시 BottomSheet로 설명 표시"
+            - name: "collapsed"
+              appearance: "IconButton(panel)만 표시"
+              behavior: "클릭 시 펼침"
+
+        # QDS: BottomSheet 사용
+        - id: "keyword_bottomsheet"
+          type: "BottomSheet"
+          description: "키워드 설명 바텀시트 (모바일 최적화)"
+          props:
+            title: "string"          # 키워드 용어
+            footer: "ReactNode"      # 닫기 버튼
+          states:
+            - name: "visible"
+              appearance: "Typography(title_3)로 용어, Typography(body_1)로 정의, Typography(body_2, gray_50)로 맥락"
+              behavior: "외부 클릭 또는 드래그 다운 시 닫힘"
+
+        # QDS: Switch 사용
+        - id: "translation_toggle"
+          type: "Switch"
+          description: "번역 on/off 토글"
+          props:
+            checked: "boolean"
+            onChange: "function"
+            disabled: "boolean"
+          states:
+            - name: "off"
+              appearance: "Switch checked=false"
+              behavior: "원문만 표시"
+            - name: "on"
+              appearance: "Switch checked=true"
+              behavior: "번역문 표시"
+            - name: "loading"
+              appearance: "Switch disabled=true + 옆에 Spinner(size=16)"
+              behavior: "번역 처리 중"
+
+      interactions:
+        - trigger: "목차 섹션 클릭"
+          action: "해당 섹션으로 스크롤"
+          feedback: "부드러운 스크롤 애니메이션, StateLayer로 현재 섹션 하이라이트"
+        - trigger: "번역 Switch on"
+          action: "번역 요청 및 표시"
+          feedback: "Spinner 표시 후 번역문 페이드인"
+        - trigger: "하이라이트 문장 탭/클릭"
+          action: "하이라이트 이유 표시"
+          feedback: "BottomSheet로 이유 표시"
+        - trigger: "키워드 Tag 클릭"
+          action: "키워드 설명 로드"
+          feedback: "BottomSheet로 설명 표시"
+        - trigger: "스크롤"
+          action: "현재 섹션 추적"
+          feedback: "목차에서 StateLayer로 현재 위치 하이라이트"
+
+      responsive:
+        mobile: "SMALL 브레이크포인트, 사이드바 숨김, BottomSheet로 대체, 툴바 IconButton만"
+        tablet: "MEDIUM 브레이크포인트, 목차 접힘 기본, 사이드 패널 BottomSheet 오버레이"
+        desktop: "LARGE 브레이크포인트, 3컬럼 레이아웃 (목차 | 뷰어 | 사이드 패널)"
+
+      accessibility:
+        focus_order: ["viewer_header", "toolbar", "toc_sidebar", "pdf_viewer", "side_panel"]
+        aria_labels:
+          toc_sidebar: "논문 목차"
+          pdf_viewer: "논문 본문"
+          side_panel: "분석 결과 패널"
+          translation_toggle: "번역 켜기/끄기"
+        keyboard_shortcuts:
+          "j": "다음 섹션으로 이동"
+          "k": "이전 섹션으로 이동"
+          "t": "번역 토글"
+          "h": "하이라이트 토글"
+          "s": "요약 패널 토글"
+          "Escape": "패널 닫기"
+
+    # ========================================
+    # SCR-003: 내 논문 목록 페이지
+    # ========================================
+    - id: "SCR-003"
+      name: "내 논문 목록"
+      route: "/papers"
+      description: "사용자가 업로드한 논문 목록 관리"
+      implements_features: ["F-001"]
+
+      layout: |
+        +------------------------------------------+
+        |  TopAppBar                               |
+        +------------------------------------------+
+        |  [ Button: 새 논문 업로드 ]  [ 검색 ]     |
+        +------------------------------------------+
+        |                                          |
+        |  +--------+  +--------+  +--------+      |
+        |  | Paper  |  | Paper  |  | Paper  |      |
+        |  | Card   |  | Card   |  | Card   |      |
+        |  +--------+  +--------+  +--------+      |
+        |                                          |
+        |  +--------+  +--------+  +--------+      |
+        |  | Paper  |  | Paper  |  | Paper  |      |
+        |  | Card   |  | Card   |  | Card   |      |
+        |  +--------+  +--------+  +--------+      |
+        |                                          |
+        +------------------------------------------+
+        |  FloatingActionButton (모바일)           |
+        +------------------------------------------+
+
+      components:
+        # QDS: TopAppBar 사용
+        - id: "papers_header"
+          type: "TopAppBar"
+          description: "논문 목록 상단 헤더"
+          props:
+            main: "ReactNode"        # 로고 또는 타이틀
+            leading: "ReactNode"     # 뒤로가기 (홈에서 왔을 경우)
+            trailing: "ReactNode"    # 프로필 IconButton
+          states:
+            - name: "default"
+              appearance: "main에 Typography(title_1, '내 논문'), trailing에 IconButton(profile)"
+              behavior: null
+
+        # 커스텀 컴포넌트 (QDS 기반 조합)
+        - id: "paper_grid"
+          type: "CustomComponent"
+          qds_components_used: ["LoadingAnimation", "Typography", "Button"]
+          description: "논문 카드 그리드"
+          props:
+            papers: "Paper[]"
+          states:
+            - name: "loading"
+              appearance: "LoadingAnimation(size=48) 중앙, 스켈레톤 카드 그리드"
+              behavior: "데이터 로딩 중"
+            - name: "empty"
+              appearance: "Typography(title_2)로 빈 상태 메시지, Button(variant=accent)로 업로드 유도"
+              behavior: "Button 클릭 시 업로드 페이지로 이동"
+            - name: "populated"
+              appearance: "CSS Grid로 카드 배치"
+              behavior: "카드 클릭 시 뷰어로 이동"
+
+        # 커스텀 컴포넌트 (QDS 기반 조합)
+        - id: "paper_card"
+          type: "CustomComponent"
+          qds_components_used: ["Typography", "Tag", "IconButton", "Spinner", "Shadow", "StateLayer"]
+          description: "개별 논문 카드"
+          props:
+            paper: "Paper"
+          states:
+            - name: "default"
+              appearance: "shadow(1), Typography(title_3)로 제목, Typography(caption_1, gray_50)로 날짜, Tag로 상태 표시"
+              behavior: "클릭 시 뷰어로 이동"
+            - name: "processing"
+              appearance: "Spinner 오버레이, Tag(color=blue, style=tonal)로 '분석 중' 표시"
+              behavior: "분석 진행 중"
+            - name: "hover"
+              appearance: "shadow(2), StateLayer, trailing에 IconButton(delete, share) 표시"
+              behavior: "삭제, 공유 버튼 노출"
+
+        # 커스텀 컴포넌트 (QDS 기반 조합)
+        - id: "search_bar"
+          type: "CustomComponent"
+          qds_components_used: ["Icon", "Typography"]
+          description: "논문 검색 필드 (input은 네이티브 HTML)"
+          props:
+            placeholder: "string"
+          states:
+            - name: "idle"
+              appearance: "Icon(search, gray_50), placeholder 텍스트"
+              behavior: "포커스 시 확장"
+            - name: "active"
+              appearance: "border blue_50, 입력 필드 확장"
+              behavior: "실시간 필터링"
+
+        # QDS: Button 사용
+        - id: "upload_button"
+          type: "Button"
+          description: "새 논문 업로드 버튼"
+          props:
+            variant: "accent"
+            size: "m"
+          states:
+            - name: "default"
+              appearance: "Button(variant=accent, size=m), '새 논문 업로드' 텍스트"
+              behavior: "클릭 시 업로드 페이지로 이동"
+
+        # QDS: FloatingActionButton 사용 (모바일)
+        - id: "upload_fab"
+          type: "FloatingActionButton"
+          description: "모바일용 업로드 FAB"
+          props:
+            color: "accent"
+            icon: "add"
+          states:
+            - name: "default"
+              appearance: "FloatingActionButton(color=accent), add 아이콘"
+              behavior: "클릭 시 업로드 페이지로 이동"
+
+      interactions:
+        - trigger: "논문 카드 클릭"
+          action: "뷰어 페이지로 이동"
+          feedback: "StateLayer 피드백 후 페이지 전환"
+        - trigger: "삭제 IconButton 클릭"
+          action: "AlertDialog로 삭제 확인"
+          feedback: "AlertDialog 표시, 확인 시 카드 페이드아웃"
+        - trigger: "검색어 입력"
+          action: "제목으로 필터링"
+          feedback: "즉시 필터링 적용"
+
+      responsive:
+        mobile: "SMALL 브레이크포인트, 1컬럼 리스트, FloatingActionButton 표시, upload_button 숨김"
+        tablet: "MEDIUM 브레이크포인트, 2컬럼 그리드"
+        desktop: "LARGE 브레이크포인트, 3-4컬럼 그리드, FAB 숨김, upload_button 표시"
+
+      accessibility:
+        focus_order: ["search_bar", "upload_button", "paper_grid"]
+        aria_labels:
+          paper_grid: "내 논문 목록"
+          search_bar: "논문 검색"
+          upload_fab: "새 논문 업로드"
+
+  # ----------------------------------------------------------
+  # 공유 컴포넌트 (Shared Components)
+  # ----------------------------------------------------------
+  # 반드시 QDS 컴포넌트 사용
+  # ----------------------------------------------------------
+  shared_components:
+    # QDS: Spinner 사용
+    - id: "loading_spinner"
+      type: "Spinner"
+      description: "로딩 인디케이터"
+      props:
+        size: "number"  # 16, 24, 32, 48 등
+      note: "QDS Spinner 컴포넌트 직접 사용"
+
+    # QDS: LoadingAnimation 사용
+    - id: "loading_animation"
+      type: "LoadingAnimation"
+      description: "큰 로딩 애니메이션"
+      props:
+        size: "number"
+      note: "전체 페이지 로딩 시 사용"
+
+    # 커스텀 컴포넌트 (QDS 기반 조합)
+    - id: "error_message"
+      type: "CustomComponent"
+      qds_components_used: ["Typography", "Tag", "Button"]
+      description: "에러 메시지 표시"
+      props:
+        type: "error | warning | info"
+        message: "string"
+        action: "string | null"
+      note: "Tag(color=red|orange|blue)와 Typography 조합"
+
+    # QDS: AlertDialog 사용
+    - id: "confirm_dialog"
+      type: "AlertDialog"
+      description: "확인 다이얼로그"
+      props:
+        title: "string"
+        description: "string"
+        confirmButton: "ReactNode"  # Button(variant=danger)
+        cancelButton: "ReactNode"   # Button(variant=outlined)
+      note: "QDS AlertDialog 컴포넌트 직접 사용"
+
+    # 커스텀 컴포넌트 (QDS 기반 조합) - 토스트는 QDS에 없음
+    - id: "toast"
+      type: "CustomComponent"
+      qds_components_used: ["Typography", "Icon", "Shadow"]
+      description: "알림 토스트 (커스텀 구현 필요)"
+      props:
+        type: "success | error | info"
+        message: "string"
+        duration: "number"
+      position: "bottom-center"
+      note: "QDS에 Toast 없음, Typography + Icon + Shadow로 커스텀 구현"
+
+# ============================================================
+# 메타데이터
+# ============================================================
+metadata:
+  created_at: "2025-01-13T11:30:00+09:00"
+  updated_at: "2025-01-13T14:00:00+09:00"
+  author: "assistant"
+  status: "draft"
+  depends_on:
+    - "functional-spec.yaml"
+  design_system:
+    package: "@qanda/qds4-web"
+    version: "^0.0.2"
+    reference: "templates/design-system/qds4-web.yaml"
+  statistics:
+    total_screens: 3
+    total_components: 21
+    total_shared_components: 5
+    qds_direct_components: 8
+    custom_components_using_qds: 13

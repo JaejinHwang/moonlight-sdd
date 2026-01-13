@@ -1,0 +1,69 @@
+# ============================================================
+# Implementation Result (구현 결과 기록)
+# 각 태스크 완료 후 자동/수동으로 생성
+# ============================================================
+# 파일명 규칙: TASK-001-result.yaml
+# ============================================================
+
+implementation_result:
+  task_id: "{{task_id}}"
+  feature_id: "{{feature_id}}"
+  
+  # 완료 정보
+  completed_at: "{{timestamp}}"
+  implemented_by: "{{claude-code|cursor|manual}}"
+  duration_minutes: {{duration}}
+  
+  # 생성된 파일 목록
+  files_created:
+    - path: "{{file_path}}"
+      lines: {{line_count}}
+      purpose: "{{file_purpose}}"
+  
+  files_modified:
+    - path: "{{file_path}}"
+      changes: "{{change_summary}}"
+  
+  # 테스트 결과
+  test_results:
+    total: {{total_tests}}
+    passed: {{passed_tests}}
+    failed: {{failed_tests}}
+    skipped: {{skipped_tests}}
+    coverage:
+      statements: {{percentage}}
+      branches: {{percentage}}
+      functions: {{percentage}}
+      lines: {{percentage}}
+  
+  # 스펙 준수 확인
+  spec_compliance:
+    # 상태 구현 여부
+    states:
+      - name: "{{state_name}}"
+        implemented: true
+    
+    # 에러 케이스 처리 여부
+    error_cases:
+      - code: "{{error_code}}"
+        implemented: true
+    
+    # 엣지 케이스 대응 여부
+    edge_cases:
+      - scenario: "{{scenario}}"
+        implemented: true
+        notes: "{{implementation_notes}}"
+  
+  # 스펙과 다르게 구현한 부분 (필수 기록!)
+  deviations:
+    - spec_item: "{{what_spec_said}}"
+      actual: "{{what_was_implemented}}"
+      reason: "{{why_different}}"
+      approved: false  # 사용자 승인 필요
+      approved_by: ""
+      approved_at: ""
+  
+  # 다음 작업 정보
+  next_tasks:
+    unblocked: []  # 이 작업 완료로 시작 가능해진 태스크
+    notes: "{{additional_notes}}"

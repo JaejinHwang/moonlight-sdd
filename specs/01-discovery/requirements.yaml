@@ -1,0 +1,85 @@
+requirements:
+  user_stories:
+    - id: "US-001"
+      as_a: "비전공 분야의 논문을 읽는 연구자/실무자"
+      i_want: "PDF 파일 또는 URL을 통해 논문을 업로드"
+      so_that: "서비스 내에서 논문을 읽고 분석할 수 있다"
+      priority: "must"
+      acceptance_criteria:
+        - "Given 사용자가 메인 페이지에 있을 때, When PDF 파일을 드래그앤드롭하면, Then 논문이 업로드되고 뷰어에 표시된다"
+        - "Given 사용자가 메인 페이지에 있을 때, When 논문 URL을 입력하면, Then 해당 논문이 다운로드되어 뷰어에 표시된다"
+
+    - id: "US-002"
+      as_a: "비전공 분야의 논문을 읽는 연구자/실무자"
+      i_want: "PDF 뷰어에서 단락별 앵커포인트와 스크롤 링크 기능을 사용"
+      so_that: "논문의 특정 위치로 빠르게 이동할 수 있다"
+      priority: "must"
+      acceptance_criteria:
+        - "Given 논문이 뷰어에 로드되었을 때, When 목차의 섹션을 클릭하면, Then 해당 섹션으로 스크롤된다"
+        - "Given 논문이 뷰어에 로드되었을 때, When 단락에 마우스를 올리면, Then 해당 단락의 앵커 링크가 표시된다"
+
+    - id: "US-003"
+      as_a: "비전공 분야의 논문을 읽는 연구자/실무자"
+      i_want: "논문 내용을 원하는 언어로 자동 번역"
+      so_that: "영어 논문을 모국어로 쉽게 읽을 수 있다"
+      priority: "must"
+      acceptance_criteria:
+        - "Given 논문이 뷰어에 로드되었을 때, When 번역 언어를 선택하면, Then 전체 논문이 해당 언어로 번역되어 표시된다"
+        - "Given 번역된 논문을 보고 있을 때, When 원문 보기를 클릭하면, Then 원문과 번역문을 함께 볼 수 있다"
+
+    - id: "US-004"
+      as_a: "비전공 분야의 논문을 읽는 연구자/실무자"
+      i_want: "논문의 핵심 내용이 자동으로 하이라이트되고 요약을 확인"
+      so_that: "중요한 부분을 빠르게 파악할 수 있다"
+      priority: "must"
+      acceptance_criteria:
+        - "Given 논문이 뷰어에 로드되었을 때, When AI 분석이 완료되면, Then 핵심 문장들이 하이라이트되어 표시된다"
+        - "Given 논문이 뷰어에 로드되었을 때, When 요약 패널을 열면, Then 논문 전체 요약과 섹션별 요약이 표시된다"
+
+    - id: "US-005"
+      as_a: "비전공 분야의 논문을 읽는 연구자/실무자"
+      i_want: "논문의 핵심 키워드와 각 키워드에 대한 설명을 확인"
+      so_that: "모르는 용어를 외부 검색 없이 이해할 수 있다"
+      priority: "must"
+      acceptance_criteria:
+        - "Given 논문이 뷰어에 로드되었을 때, When AI 분석이 완료되면, Then 핵심 키워드 목록이 추출되어 표시된다"
+        - "Given 키워드 목록이 표시되었을 때, When 키워드를 클릭하면, Then 논문 맥락 내에서의 키워드 설명이 표시된다"
+
+  non_functional:
+    performance:
+      - requirement: "PDF 업로드 및 파싱 완료"
+        threshold: "10MB 이하 PDF 기준 10초 이내"
+      - requirement: "AI 분석 (번역, 요약, 키워드 추출) 완료"
+        threshold: "논문 1편 기준 60초 이내"
+      - requirement: "페이지 초기 로딩 시간"
+        threshold: "3초 이내"
+    security:
+      - requirement: "사용자 업로드 논문 데이터 암호화 저장"
+      - requirement: "HTTPS 통신 필수"
+      - requirement: "사용자 세션 관리 및 인증"
+    accessibility:
+      - requirement: "WCAG 2.1 AA 준수"
+
+  constraints:
+    technical:
+      - "Next.js 프레임워크 사용"
+      - "Supabase 백엔드 사용"
+      - "@qanda/qds4-web 디자인 시스템 사용 필수"
+      - "API 비용 최소화 (효율적인 토큰 사용)"
+    business:
+      - "MVP 단계에서 비용 최소화 우선"
+    legal:
+      - "논문 저작권 준수 - 사용자 개인 용도로만 사용"
+      - "업로드된 논문의 무단 재배포 금지"
+      - "사용자 데이터 암호화 및 개인정보 보호"
+    design:
+      - "UI 컴포넌트는 QDS4만 사용 (shadcn/ui 등 금지)"
+      - "색상/타이포그래피는 QDS4 토큰만 사용"
+
+metadata:
+  created_at: "2025-01-13T11:10:00+09:00"
+  author: "user"
+  status: "draft"
+  depends_on:
+    - "idea-crystal.yaml"
+    - "problem-definition.yaml"

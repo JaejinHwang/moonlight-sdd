@@ -1,0 +1,735 @@
+functional_spec:
+  features:
+    # ========================================
+    # US-001: PDF 파일/URL 업로드
+    # ========================================
+    - id: "F-001"
+      name: "PDF 파일 업로드"
+      description: "사용자가 로컬 PDF 파일을 드래그앤드롭 또는 파일 선택으로 업로드"
+      parent_story: "US-001"
+      dependencies: []
+
+      states:
+        - name: "idle"
+          description: "초기 상태 - 업로드 대기"
+          transitions:
+            - trigger: "file_selected"
+              target: "validating"
+              condition: null
+            - trigger: "file_dropped"
+              target: "validating"
+              condition: null
+        - name: "validating"
+          description: "파일 유효성 검증 중"
+          transitions:
+            - trigger: "validation_success"
+              target: "uploading"
+              condition: "file.type === 'application/pdf' && file.size <= 10MB"
+            - trigger: "validation_failed"
+              target: "error"
+              condition: null
+        - name: "uploading"
+          description: "서버로 파일 업로드 중"
+          transitions:
+            - trigger: "upload_success"
+              target: "parsing"
+              condition: null
+            - trigger: "upload_failed"
+              target: "error"
+              condition: null
+        - name: "parsing"
+          description: "PDF 파싱 및 구조화 중"
+          transitions:
+            - trigger: "parsing_success"
+              target: "completed"
+              condition: null
+            - trigger: "parsing_failed"
+              target: "error"
+              condition: null
+        - name: "completed"
+          description: "업로드 및 파싱 완료"
+          transitions:
+            - trigger: "reset"
+              target: "idle"
+              condition: null
+        - name: "error"
+          description: "에러 상태"
+          transitions:
+            - trigger: "retry"
+              target: "idle"
+              condition: null
+
+      inputs:
+        - name: "file"
+          type: "File"
+          validation: "PDF 형식, 최대 10MB"
+          required: true
+
+      outputs:
+        - name: "paper"
+          type: "Paper"
+          format: |
+            {
+              "id": "UUID",
+              "title": "string",
+              "sections": "Section[]",
+              "metadata": "PaperMetadata"
+            }
+
+      error_cases:
+        - condition: "파일 형식이 PDF가 아닌 경우"
+          error_code: "INVALID_FILE_TYPE"
+          user_message: "PDF 파일만 업로드할 수 있습니다."
+          recovery_action: "올바른 PDF 파일을 선택해주세요."
+        - condition: "파일 크기가 10MB를 초과하는 경우"
+          error_code: "FILE_TOO_LARGE"
+          user_message: "파일 크기가 10MB를 초과합니다."
+          recovery_action: "더 작은 파일을 업로드하거나 파일을 압축해주세요."
+        - condition: "PDF가 암호화되어 있는 경우"
+          error_code: "PDF_ENCRYPTED"
+          user_message: "암호화된 PDF는 지원하지 않습니다."
+          recovery_action: "암호를 해제한 PDF를 업로드해주세요."
+        - condition: "네트워크 오류로 업로드 실패"
+          error_code: "UPLOAD_NETWORK_ERROR"
+          user_message: "업로드 중 네트워크 오류가 발생했습니다."
+          recovery_action: "네트워크 연결을 확인하고 다시 시도해주세요."
+
+      edge_cases:
+        - scenario: "스캔된 이미지 PDF (텍스트 없음)"
+          expected_behavior: "OCR 처리 후 텍스트 추출 시도, 실패 시 안내 메시지"
+        - scenario: "다중 컬럼 레이아웃 PDF"
+          expected_behavior: "컬럼 순서대로 텍스트 추출"
+        - scenario: "수식이 포함된 PDF"
+          expected_behavior: "LaTeX 형식으로 수식 보존"
+
+      performance:
+        - metric: "업로드 완료 시간"
+          threshold: "10MB 기준 5초 이내"
+        - metric: "파싱 완료 시간"
+          threshold: "10MB 기준 10초 이내"
+
+    # ----------------------------------------
+    - id: "F-002"
+      name: "URL 논문 다운로드"
+      description: "사용자가 논문 URL을 입력하면 자동으로 PDF 다운로드"
+      parent_story: "US-001"
+      dependencies: []
+
+      states:
+        - name: "idle"
+          description: "초기 상태 - URL 입력 대기"
+          transitions:
+            - trigger: "url_submitted"
+              target: "validating"
+              condition: null
+        - name: "validating"
+          description: "URL 유효성 검증 중"
+          transitions:
+            - trigger: "validation_success"
+              target: "downloading"
+              condition: "URL 형식 유효"
+            - trigger: "validation_failed"
+              target: "error"
+              condition: null
+        - name: "downloading"
+          description: "PDF 다운로드 중"
+          transitions:
+            - trigger: "download_success"
+              target: "parsing"
+              condition: null
+            - trigger: "download_failed"
+              target: "error"
+              condition: null
+        - name: "parsing"
+          description: "PDF 파싱 중"
+          transitions:
+            - trigger: "parsing_success"
+              target: "completed"
+              condition: null
+            - trigger: "parsing_failed"
+              target: "error"
+              condition: null
+        - name: "completed"
+          description: "다운로드 및 파싱 완료"
+          transitions:
+            - trigger: "reset"
+              target: "idle"
+              condition: null
+        - name: "error"
+          description: "에러 상태"
+          transitions:
+            - trigger: "retry"
+              target: "idle"
+              condition: null
+
+      inputs:
+        - name: "url"
+          type: "string"
+          validation: "유효한 URL 형식, PDF 직접 링크 또는 arXiv/DOI 링크"
+          required: true
+
+      outputs:
+        - name: "paper"
+          type: "Paper"
+          format: |
+            {
+              "id": "UUID",
+              "title": "string",
+              "sourceUrl": "string",
+              "sections": "Section[]",
+              "metadata": "PaperMetadata"
+            }
+
+      error_cases:
+        - condition: "잘못된 URL 형식"
+          error_code: "INVALID_URL"
+          user_message: "올바른 URL을 입력해주세요."
+          recovery_action: "URL 형식을 확인해주세요."
+        - condition: "URL에서 PDF를 찾을 수 없음"
+          error_code: "PDF_NOT_FOUND"
+          user_message: "해당 URL에서 PDF를 찾을 수 없습니다."
+          recovery_action: "직접 PDF 링크를 입력하거나 파일을 업로드해주세요."
+        - condition: "접근 권한 없음 (로그인 필요)"
+          error_code: "ACCESS_DENIED"
+          user_message: "해당 논문에 접근할 수 없습니다."
+          recovery_action: "직접 PDF를 다운로드하여 업로드해주세요."
+
+      edge_cases:
+        - scenario: "arXiv URL 입력"
+          expected_behavior: "arXiv ID 추출 후 PDF 직접 다운로드"
+        - scenario: "DOI URL 입력"
+          expected_behavior: "DOI 리졸브 후 PDF 다운로드 시도"
+
+      performance:
+        - metric: "다운로드 완료 시간"
+          threshold: "20초 이내"
+
+    # ========================================
+    # US-002: PDF 뷰어
+    # ========================================
+    - id: "F-003"
+      name: "PDF 뷰어 렌더링"
+      description: "업로드된 논문을 웹에서 읽기 좋은 형태로 렌더링"
+      parent_story: "US-002"
+      dependencies: ["F-001", "F-002"]
+
+      states:
+        - name: "idle"
+          description: "초기 상태"
+          transitions:
+            - trigger: "paper_loaded"
+              target: "rendering"
+              condition: null
+        - name: "rendering"
+          description: "렌더링 중"
+          transitions:
+            - trigger: "render_success"
+              target: "ready"
+              condition: null
+            - trigger: "render_failed"
+              target: "error"
+              condition: null
+        - name: "ready"
+          description: "뷰어 준비 완료"
+          transitions:
+            - trigger: "scroll"
+              target: "ready"
+              condition: null
+            - trigger: "zoom"
+              target: "ready"
+              condition: null
+        - name: "error"
+          description: "렌더링 에러"
+          transitions:
+            - trigger: "retry"
+              target: "rendering"
+              condition: null
+
+      inputs:
+        - name: "paper"
+          type: "Paper"
+          validation: "파싱 완료된 Paper 객체"
+          required: true
+
+      outputs:
+        - name: "renderedView"
+          type: "ReactComponent"
+          format: |
+            {
+              "sections": "RenderedSection[]",
+              "currentPosition": "ScrollPosition"
+            }
+
+      error_cases:
+        - condition: "렌더링 메모리 부족"
+          error_code: "RENDER_MEMORY_ERROR"
+          user_message: "페이지를 표시하는 데 문제가 발생했습니다."
+          recovery_action: "페이지를 새로고침해주세요."
+        - condition: "폰트 로딩 실패"
+          error_code: "FONT_LOAD_ERROR"
+          user_message: "일부 폰트가 로드되지 않았습니다."
+          recovery_action: "기본 폰트로 표시됩니다."
+        - condition: "이미지 로딩 실패"
+          error_code: "IMAGE_LOAD_ERROR"
+          user_message: "일부 이미지를 불러올 수 없습니다."
+          recovery_action: "이미지 영역에 placeholder 표시"
+
+      edge_cases:
+        - scenario: "100페이지 이상의 긴 논문"
+          expected_behavior: "가상 스크롤로 메모리 효율적 렌더링"
+        - scenario: "수식이 많은 논문"
+          expected_behavior: "KaTeX/MathJax로 수식 렌더링"
+
+      performance:
+        - metric: "초기 렌더링 시간"
+          threshold: "3초 이내"
+        - metric: "스크롤 프레임레이트"
+          threshold: "60fps"
+
+    # ----------------------------------------
+    - id: "F-004"
+      name: "목차 네비게이션"
+      description: "논문 구조 기반 목차 표시 및 섹션 이동"
+      parent_story: "US-002"
+      dependencies: ["F-003"]
+
+      states:
+        - name: "collapsed"
+          description: "목차 접힌 상태"
+          transitions:
+            - trigger: "expand"
+              target: "expanded"
+              condition: null
+        - name: "expanded"
+          description: "목차 펼친 상태"
+          transitions:
+            - trigger: "collapse"
+              target: "collapsed"
+              condition: null
+            - trigger: "section_click"
+              target: "navigating"
+              condition: null
+        - name: "navigating"
+          description: "섹션으로 이동 중"
+          transitions:
+            - trigger: "navigation_complete"
+              target: "expanded"
+              condition: null
+
+      inputs:
+        - name: "sections"
+          type: "Section[]"
+          validation: "파싱된 섹션 배열"
+          required: true
+
+      outputs:
+        - name: "tocComponent"
+          type: "ReactComponent"
+          format: |
+            {
+              "items": "TocItem[]",
+              "activeSection": "string"
+            }
+
+      error_cases:
+        - condition: "섹션 구조 파싱 실패"
+          error_code: "TOC_PARSE_ERROR"
+          user_message: "목차를 생성할 수 없습니다."
+          recovery_action: "페이지 번호 기반 네비게이션 제공"
+        - condition: "앵커 대상 없음"
+          error_code: "ANCHOR_NOT_FOUND"
+          user_message: "해당 섹션을 찾을 수 없습니다."
+          recovery_action: "가장 가까운 위치로 스크롤"
+        - condition: "중첩 섹션 깊이 초과"
+          error_code: "TOC_DEPTH_EXCEEDED"
+          user_message: null
+          recovery_action: "최대 3단계까지만 표시"
+
+      edge_cases:
+        - scenario: "섹션 제목이 없는 논문"
+          expected_behavior: "페이지 번호 기반 네비게이션 제공"
+        - scenario: "매우 긴 섹션 제목"
+          expected_behavior: "말줄임(...) 처리, 호버 시 전체 표시"
+
+      performance:
+        - metric: "섹션 이동 시간"
+          threshold: "300ms 이내"
+
+    # ========================================
+    # US-003: 자동 번역
+    # ========================================
+    - id: "F-005"
+      name: "자동 번역"
+      description: "논문 전체 또는 선택 영역을 원하는 언어로 번역"
+      parent_story: "US-003"
+      dependencies: ["F-003"]
+
+      states:
+        - name: "idle"
+          description: "번역 대기 상태"
+          transitions:
+            - trigger: "translate_requested"
+              target: "translating"
+              condition: null
+        - name: "translating"
+          description: "번역 처리 중"
+          transitions:
+            - trigger: "translation_success"
+              target: "translated"
+              condition: null
+            - trigger: "translation_failed"
+              target: "error"
+              condition: null
+            - trigger: "cancel"
+              target: "idle"
+              condition: null
+        - name: "translated"
+          description: "번역 완료"
+          transitions:
+            - trigger: "show_original"
+              target: "showing_both"
+              condition: null
+            - trigger: "clear_translation"
+              target: "idle"
+              condition: null
+        - name: "showing_both"
+          description: "원문과 번역문 동시 표시"
+          transitions:
+            - trigger: "hide_original"
+              target: "translated"
+              condition: null
+        - name: "error"
+          description: "번역 에러"
+          transitions:
+            - trigger: "retry"
+              target: "translating"
+              condition: null
+
+      inputs:
+        - name: "text"
+          type: "string"
+          validation: "번역할 텍스트"
+          required: true
+        - name: "targetLanguage"
+          type: "string"
+          validation: "ISO 639-1 언어 코드"
+          required: true
+        - name: "sourceLanguage"
+          type: "string"
+          validation: "ISO 639-1 언어 코드, 기본값 auto"
+          required: false
+
+      outputs:
+        - name: "translatedText"
+          type: "TranslationResult"
+          format: |
+            {
+              "original": "string",
+              "translated": "string",
+              "sourceLang": "string",
+              "targetLang": "string"
+            }
+
+      error_cases:
+        - condition: "지원하지 않는 언어"
+          error_code: "UNSUPPORTED_LANGUAGE"
+          user_message: "해당 언어는 지원하지 않습니다."
+          recovery_action: "지원 언어 목록 표시"
+        - condition: "API 할당량 초과"
+          error_code: "QUOTA_EXCEEDED"
+          user_message: "일일 번역 한도에 도달했습니다."
+          recovery_action: "내일 다시 시도하거나 프리미엄으로 업그레이드"
+        - condition: "번역 API 응답 지연"
+          error_code: "TRANSLATION_TIMEOUT"
+          user_message: "번역이 지연되고 있습니다."
+          recovery_action: "잠시 후 다시 시도해주세요."
+
+      edge_cases:
+        - scenario: "수식이 포함된 텍스트"
+          expected_behavior: "수식은 번역하지 않고 보존"
+        - scenario: "전문 용어가 많은 텍스트"
+          expected_behavior: "학술 용어는 원문 병기"
+
+      performance:
+        - metric: "번역 응답 시간"
+          threshold: "단락당 3초 이내"
+        - metric: "전체 논문 번역"
+          threshold: "60초 이내"
+
+    # ========================================
+    # US-004: 핵심 내용 하이라이트 + 요약
+    # ========================================
+    - id: "F-006"
+      name: "핵심 하이라이트"
+      description: "AI가 분석한 핵심 문장을 자동으로 하이라이트"
+      parent_story: "US-004"
+      dependencies: ["F-003"]
+
+      states:
+        - name: "idle"
+          description: "분석 대기"
+          transitions:
+            - trigger: "analyze_requested"
+              target: "analyzing"
+              condition: null
+        - name: "analyzing"
+          description: "AI 분석 중"
+          transitions:
+            - trigger: "analysis_success"
+              target: "highlighted"
+              condition: null
+            - trigger: "analysis_failed"
+              target: "error"
+              condition: null
+        - name: "highlighted"
+          description: "하이라이트 표시 중"
+          transitions:
+            - trigger: "toggle_off"
+              target: "hidden"
+              condition: null
+        - name: "hidden"
+          description: "하이라이트 숨김"
+          transitions:
+            - trigger: "toggle_on"
+              target: "highlighted"
+              condition: null
+        - name: "error"
+          description: "분석 에러"
+          transitions:
+            - trigger: "retry"
+              target: "analyzing"
+              condition: null
+
+      inputs:
+        - name: "paper"
+          type: "Paper"
+          validation: "파싱된 논문"
+          required: true
+
+      outputs:
+        - name: "highlights"
+          type: "Highlight[]"
+          format: |
+            {
+              "id": "string",
+              "text": "string",
+              "sectionId": "string",
+              "importance": "high|medium|low",
+              "reason": "string"
+            }
+
+      error_cases:
+        - condition: "AI API 오류"
+          error_code: "AI_API_ERROR"
+          user_message: "핵심 내용 분석에 실패했습니다."
+          recovery_action: "다시 시도해주세요."
+        - condition: "논문 내용이 너무 짧음"
+          error_code: "CONTENT_TOO_SHORT"
+          user_message: "분석할 내용이 충분하지 않습니다."
+          recovery_action: null
+        - condition: "언어 감지 실패"
+          error_code: "LANGUAGE_DETECTION_FAILED"
+          user_message: "논문 언어를 감지할 수 없습니다."
+          recovery_action: "언어를 직접 선택해주세요."
+
+      edge_cases:
+        - scenario: "모든 내용이 중요한 짧은 논문"
+          expected_behavior: "상위 30% 문장만 하이라이트"
+        - scenario: "표/그림 캡션의 중요 내용"
+          expected_behavior: "캡션도 하이라이트 대상에 포함"
+
+      performance:
+        - metric: "분석 완료 시간"
+          threshold: "30초 이내"
+
+    # ----------------------------------------
+    - id: "F-007"
+      name: "논문 요약"
+      description: "논문 전체 요약 및 섹션별 요약 제공"
+      parent_story: "US-004"
+      dependencies: ["F-003"]
+
+      states:
+        - name: "idle"
+          description: "요약 대기"
+          transitions:
+            - trigger: "summarize_requested"
+              target: "summarizing"
+              condition: null
+        - name: "summarizing"
+          description: "요약 생성 중"
+          transitions:
+            - trigger: "summary_success"
+              target: "ready"
+              condition: null
+            - trigger: "summary_failed"
+              target: "error"
+              condition: null
+        - name: "ready"
+          description: "요약 표시 가능"
+          transitions:
+            - trigger: "expand_section"
+              target: "ready"
+              condition: null
+            - trigger: "collapse_section"
+              target: "ready"
+              condition: null
+        - name: "error"
+          description: "요약 에러"
+          transitions:
+            - trigger: "retry"
+              target: "summarizing"
+              condition: null
+
+      inputs:
+        - name: "paper"
+          type: "Paper"
+          validation: "파싱된 논문"
+          required: true
+        - name: "summaryLevel"
+          type: "string"
+          validation: "brief|detailed"
+          required: false
+
+      outputs:
+        - name: "summary"
+          type: "Summary"
+          format: |
+            {
+              "overall": "string",
+              "sections": [{
+                "sectionId": "string",
+                "title": "string",
+                "summary": "string"
+              }],
+              "keyFindings": "string[]"
+            }
+
+      error_cases:
+        - condition: "요약 생성 실패"
+          error_code: "SUMMARY_GENERATION_FAILED"
+          user_message: "요약을 생성할 수 없습니다."
+          recovery_action: "다시 시도해주세요."
+        - condition: "섹션 구분 불가"
+          error_code: "SECTION_PARSE_ERROR"
+          user_message: "섹션별 요약을 생성할 수 없습니다."
+          recovery_action: "전체 요약만 제공됩니다."
+        - condition: "컨텍스트 길이 초과"
+          error_code: "CONTEXT_LENGTH_EXCEEDED"
+          user_message: "논문이 너무 길어 요약이 지연됩니다."
+          recovery_action: "섹션별로 나누어 요약을 생성합니다."
+
+      edge_cases:
+        - scenario: "Abstract가 이미 있는 논문"
+          expected_behavior: "Abstract와 차별화된 요약 제공"
+        - scenario: "방법론 중심 논문"
+          expected_behavior: "방법론 섹션 요약 강화"
+
+      performance:
+        - metric: "요약 생성 시간"
+          threshold: "45초 이내"
+
+    # ========================================
+    # US-005: 키워드 추출 및 설명
+    # ========================================
+    - id: "F-008"
+      name: "키워드 추출 및 설명"
+      description: "핵심 키워드 자동 추출 및 맥락 기반 설명 제공"
+      parent_story: "US-005"
+      dependencies: ["F-003"]
+
+      states:
+        - name: "idle"
+          description: "추출 대기"
+          transitions:
+            - trigger: "extract_requested"
+              target: "extracting"
+              condition: null
+        - name: "extracting"
+          description: "키워드 추출 중"
+          transitions:
+            - trigger: "extraction_success"
+              target: "ready"
+              condition: null
+            - trigger: "extraction_failed"
+              target: "error"
+              condition: null
+        - name: "ready"
+          description: "키워드 목록 표시"
+          transitions:
+            - trigger: "keyword_clicked"
+              target: "explaining"
+              condition: null
+        - name: "explaining"
+          description: "키워드 설명 표시 중"
+          transitions:
+            - trigger: "close_explanation"
+              target: "ready"
+              condition: null
+        - name: "error"
+          description: "추출 에러"
+          transitions:
+            - trigger: "retry"
+              target: "extracting"
+              condition: null
+
+      inputs:
+        - name: "paper"
+          type: "Paper"
+          validation: "파싱된 논문"
+          required: true
+        - name: "maxKeywords"
+          type: "number"
+          validation: "최대 키워드 수, 기본값 20"
+          required: false
+
+      outputs:
+        - name: "keywords"
+          type: "Keyword[]"
+          format: |
+            {
+              "term": "string",
+              "frequency": "number",
+              "importance": "high|medium|low",
+              "definition": "string",
+              "contextInPaper": "string",
+              "relatedTerms": "string[]"
+            }
+
+      error_cases:
+        - condition: "키워드 추출 실패"
+          error_code: "KEYWORD_EXTRACTION_FAILED"
+          user_message: "키워드를 추출할 수 없습니다."
+          recovery_action: "다시 시도해주세요."
+        - condition: "설명 생성 실패"
+          error_code: "EXPLANATION_FAILED"
+          user_message: "키워드 설명을 생성할 수 없습니다."
+          recovery_action: "일반적인 정의를 표시합니다."
+        - condition: "전문 용어 인식 실패"
+          error_code: "TERM_NOT_RECOGNIZED"
+          user_message: null
+          recovery_action: "일반 명사로 처리"
+
+      edge_cases:
+        - scenario: "약어(Abbreviation) 처리"
+          expected_behavior: "약어 풀이와 함께 설명"
+        - scenario: "동음이의어"
+          expected_behavior: "논문 맥락에 맞는 의미로 설명"
+
+      performance:
+        - metric: "키워드 추출 시간"
+          threshold: "15초 이내"
+        - metric: "개별 설명 생성 시간"
+          threshold: "3초 이내"
+
+metadata:
+  created_at: "2025-01-13T11:20:00+09:00"
+  author: "assistant"
+  status: "draft"
+  depends_on:
+    - "../01-discovery/requirements.yaml"
+  statistics:
+    total_features: 8
+    total_states: 40
+    total_error_cases: 24
+    total_edge_cases: 18

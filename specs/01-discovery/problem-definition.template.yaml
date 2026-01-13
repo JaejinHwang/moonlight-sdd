@@ -1,0 +1,48 @@
+# ============================================================
+# Problem Definition (문제 정의)
+# Stage 2: 현재 상태와 목표 상태의 격차를 명확히 정의
+# ============================================================
+# 의존성: idea-crystal.yaml 완성 후 작성
+# ============================================================
+
+problem_definition:
+  # 현재 사용자의 워크플로우 (As-Is)
+  # 각 단계별로 페인포인트와 소요 시간 기록
+  as_is_workflow:
+    - step: "{{step_1_name}}"
+      pain_point: "{{step_1_pain_point}}"  # 없으면 null
+      time_spent: "{{step_1_time}}"  # 예: "10분", "2시간"
+    - step: "{{step_2_name}}"
+      pain_point: "{{step_2_pain_point}}"
+      time_spent: "{{step_2_time}}"
+    # 필요한 만큼 단계 추가
+  
+  # 이상적인 워크플로우 (To-Be)
+  # 각 단계가 어떻게 개선되는지 명시
+  to_be_workflow:
+    - step: "{{improved_step_1_name}}"
+      improvement: "{{improvement_1_description}}"
+    - step: "{{improved_step_2_name}}"
+      improvement: "{{improvement_2_description}}"
+  
+  # 성공 측정 지표
+  # 반드시 정량적으로 측정 가능해야 함
+  success_metrics:
+    - metric: "{{metric_1_name}}"
+      current: "{{metric_1_current_value}}"
+      target: "{{metric_1_target_value}}"
+      measurement_method: "{{metric_1_how_to_measure}}"
+    - metric: "{{metric_2_name}}"
+      current: "{{metric_2_current_value}}"
+      target: "{{metric_2_target_value}}"
+      measurement_method: "{{metric_2_how_to_measure}}"
+
+# ============================================================
+# 메타데이터
+# ============================================================
+metadata:
+  created_at: "{{created_at}}"
+  author: "{{author}}"
+  status: "draft"
+  depends_on:
+    - "idea-crystal.yaml"

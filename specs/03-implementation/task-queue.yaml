@@ -1,0 +1,429 @@
+task_queue:
+  # ========================================
+  # Phase 0: 프로젝트 초기 설정
+  # ========================================
+  - id: "TASK-000"
+    name: "프로젝트 초기 설정"
+    description: "Next.js + Supabase + TypeScript 프로젝트 기본 구조 설정"
+    feature: null
+    type: "setup"
+    status: "completed"
+    completed_at: "2025-01-13T12:00:00+09:00"
+    priority: "critical"
+    dependencies: []
+
+    spec_refs: []
+
+    acceptance_criteria:
+      - "Given 빈 프로젝트일 때, When 초기 설정을 완료하면, Then Next.js 앱이 localhost:3000에서 실행된다"
+      - "Given 프로젝트가 설정되었을 때, When Supabase 연결을 확인하면, Then 데이터베이스 연결이 성공한다"
+      - "Given 프로젝트가 설정되었을 때, When TypeScript 컴파일을 실행하면, Then 에러 없이 빌드된다"
+
+    subtasks:
+      - "Next.js 14 App Router 프로젝트 생성"
+      - "TypeScript 설정"
+      - "Tailwind CSS 설정"
+      - "Supabase 클라이언트 설정"
+      - "환경 변수 설정 (.env.local)"
+      - "기본 폴더 구조 생성"
+      - "ESLint/Prettier 설정"
+
+  # ========================================
+  # Phase 1: 기본 인프라
+  # ========================================
+  - id: "TASK-001"
+    name: "데이터베이스 스키마 구성"
+    description: "Supabase에 논문 관련 테이블 및 RLS 정책 설정"
+    feature: null
+    type: "backend"
+    status: "completed"
+    completed_at: "2025-01-13T13:30:00+09:00"
+    priority: "critical"
+    dependencies: ["TASK-000"]
+
+    spec_refs:
+      - "technical-spec.yaml#data_model"
+
+    acceptance_criteria:
+      - "Given Supabase 프로젝트가 연결되었을 때, When users 테이블을 조회하면, Then 스키마가 정의대로 존재한다"
+      - "Given 테이블이 생성되었을 때, When RLS 정책을 확인하면, Then 사용자별 데이터 격리가 적용되어 있다"
+
+    subtasks:
+      - "users, papers, sections, translations, analysis 테이블 생성"
+      - "외래키 관계 설정"
+      - "RLS 정책 설정"
+      - "인덱스 생성"
+
+  - id: "TASK-002"
+    name: "사용자 인증 구현"
+    description: "Supabase Auth를 이용한 이메일/소셜 로그인"
+    feature: null
+    type: "fullstack"
+    status: "pending"
+    priority: "critical"
+    dependencies: ["TASK-001"]
+
+    spec_refs:
+      - "ui-spec.yaml#SCR-001.components.header"
+      - "templates/design-system/qds4-web.yaml"  # UI 작업 시 필수 참조
+
+    acceptance_criteria:
+      - "Given 로그아웃 상태일 때, When 이메일로 회원가입하면, Then 계정이 생성되고 로그인된다"
+      - "Given 로그인 상태일 때, When 로그아웃하면, Then 세션이 종료된다"
+
+    subtasks:
+      - "Supabase Auth 설정"
+      - "로그인/회원가입 UI 컴포넌트"
+      - "인증 상태 관리 (Context/Zustand)"
+      - "보호된 라우트 미들웨어"
+
+  # ========================================
+  # Phase 2: PDF 업로드 (F-001, F-002)
+  # ========================================
+  - id: "TASK-003"
+    name: "PDF 파일 업로드 UI"
+    description: "드래그앤드롭 PDF 업로드 컴포넌트"
+    feature: "F-001"
+    type: "frontend"
+    status: "pending"
+    priority: "high"
+    dependencies: ["TASK-002"]
+
+    spec_refs:
+      - "functional-spec.yaml#F-001"
+      - "ui-spec.yaml#SCR-001.components.upload_dropzone"
+      - "templates/design-system/qds4-web.yaml"  # UI 작업 시 필수 참조
+
+    acceptance_criteria:
+      - "Given 사용자가 메인 페이지에 있을 때, When PDF 파일을 드래그앤드롭하면, Then 파일이 선택되고 업로드가 시작된다"
+      - "Given 사용자가 메인 페이지에 있을 때, When 10MB 초과 파일을 업로드하면, Then FILE_TOO_LARGE 에러가 표시된다"
+      - "Given 사용자가 메인 페이지에 있을 때, When PDF가 아닌 파일을 업로드하면, Then INVALID_FILE_TYPE 에러가 표시된다"
+
+    subtasks:
+      - "DropZone 컴포넌트 구현"
+      - "파일 유효성 검증 로직"
+      - "업로드 상태 UI (idle, uploading, error)"
+      - "에러 메시지 표시"
+
+  - id: "TASK-004"
+    name: "PDF 업로드 API"
+    description: "PDF 파일을 Supabase Storage에 업로드하는 API"
+    feature: "F-001"
+    type: "backend"
+    status: "pending"
+    priority: "high"
+    dependencies: ["TASK-001"]
+
+    spec_refs:
+      - "functional-spec.yaml#F-001"
+      - "technical-spec.yaml#api_spec.endpoints[0]"
+
+    acceptance_criteria:
+      - "Given 유효한 PDF 파일이 있을 때, When POST /api/papers를 호출하면, Then 파일이 저장되고 paper ID가 반환된다"
+      - "Given PDF가 아닌 파일이 있을 때, When POST /api/papers를 호출하면, Then 400 INVALID_FILE_TYPE 에러가 반환된다"
+
+    subtasks:
+      - "POST /api/papers 엔드포인트"
+      - "Supabase Storage 업로드 로직"
+      - "papers 테이블에 메타데이터 저장"
+      - "파일 유효성 검증"
+
+  - id: "TASK-005"
+    name: "PDF 파싱 서비스"
+    description: "업로드된 PDF에서 텍스트와 구조 추출"
+    feature: "F-001"
+    type: "backend"
+    status: "pending"
+    priority: "high"
+    dependencies: ["TASK-004"]
+
+    spec_refs:
+      - "functional-spec.yaml#F-001"
+
+    acceptance_criteria:
+      - "Given PDF가 업로드되었을 때, When 파싱이 완료되면, Then 섹션별 텍스트가 추출된다"
+      - "Given 암호화된 PDF일 때, When 파싱을 시도하면, Then PDF_ENCRYPTED 에러가 반환된다"
+
+    subtasks:
+      - "PDF.js 또는 pdf-parse 라이브러리 설정"
+      - "텍스트 추출 로직"
+      - "섹션 구조 파싱"
+      - "sections 테이블에 저장"
+
+  - id: "TASK-006"
+    name: "URL 논문 다운로드"
+    description: "URL에서 PDF 다운로드 기능"
+    feature: "F-002"
+    type: "fullstack"
+    status: "pending"
+    priority: "medium"
+    dependencies: ["TASK-005"]
+
+    spec_refs:
+      - "functional-spec.yaml#F-002"
+      - "ui-spec.yaml#SCR-001.components.url_input"
+      - "technical-spec.yaml#api_spec.endpoints[1]"
+      - "templates/design-system/qds4-web.yaml"  # UI 작업 시 필수 참조
+
+    acceptance_criteria:
+      - "Given 사용자가 arXiv URL을 입력하면, When 제출하면, Then PDF가 다운로드되어 업로드된다"
+      - "Given 잘못된 URL을 입력하면, When 제출하면, Then INVALID_URL 에러가 표시된다"
+
+    subtasks:
+      - "URL 입력 UI 컴포넌트"
+      - "POST /api/papers/url 엔드포인트"
+      - "arXiv/DOI URL 파싱"
+      - "PDF 다운로드 및 저장"
+
+  # ========================================
+  # Phase 3: PDF 뷰어 (F-003, F-004)
+  # ========================================
+  - id: "TASK-007"
+    name: "PDF 뷰어 기본 구현"
+    description: "논문 텍스트 렌더링 뷰어"
+    feature: "F-003"
+    type: "frontend"
+    status: "pending"
+    priority: "high"
+    dependencies: ["TASK-005"]
+
+    spec_refs:
+      - "functional-spec.yaml#F-003"
+      - "ui-spec.yaml#SCR-002.components.pdf_viewer"
+      - "templates/design-system/qds4-web.yaml"  # UI 작업 시 필수 참조
+
+    acceptance_criteria:
+      - "Given 논문이 로드되었을 때, When 뷰어 페이지에 접근하면, Then 논문 내용이 렌더링된다"
+      - "Given 긴 논문일 때, When 스크롤하면, Then 60fps로 부드럽게 스크롤된다"
+
+    subtasks:
+      - "/paper/[id] 페이지 라우트"
+      - "논문 데이터 로딩"
+      - "섹션별 텍스트 렌더링"
+      - "가상 스크롤 (긴 문서 대응)"
+      - "수식 렌더링 (KaTeX)"
+
+  - id: "TASK-008"
+    name: "목차 네비게이션"
+    description: "사이드바 목차 및 섹션 이동"
+    feature: "F-004"
+    type: "frontend"
+    status: "pending"
+    priority: "medium"
+    dependencies: ["TASK-007"]
+
+    spec_refs:
+      - "functional-spec.yaml#F-004"
+      - "ui-spec.yaml#SCR-002.components.toc_sidebar"
+      - "templates/design-system/qds4-web.yaml"  # UI 작업 시 필수 참조
+
+    acceptance_criteria:
+      - "Given 논문이 뷰어에 로드되었을 때, When 목차의 섹션을 클릭하면, Then 해당 섹션으로 스크롤된다"
+      - "Given 스크롤 중일 때, When 현재 위치가 변경되면, Then 목차에서 현재 섹션이 하이라이트된다"
+
+    subtasks:
+      - "TableOfContents 컴포넌트"
+      - "섹션 클릭 시 스크롤"
+      - "현재 섹션 추적 (Intersection Observer)"
+      - "접기/펼치기 토글"
+
+  # ========================================
+  # Phase 4: AI 기능 (F-005, F-006, F-007, F-008)
+  # ========================================
+  - id: "TASK-009"
+    name: "Gemini API 통합"
+    description: "Gemini API 클라이언트 및 공통 유틸리티"
+    feature: null
+    type: "backend"
+    status: "pending"
+    priority: "high"
+    dependencies: ["TASK-000"]
+
+    spec_refs:
+      - "technical-spec.yaml#architecture.components"
+
+    acceptance_criteria:
+      - "Given API 키가 설정되었을 때, When Gemini API를 호출하면, Then 응답이 반환된다"
+      - "Given API 호출 실패 시, When 재시도하면, Then 최대 3회까지 재시도한다"
+
+    subtasks:
+      - "Gemini API 클라이언트 설정"
+      - "프롬프트 템플릿 관리"
+      - "에러 핸들링 및 재시도 로직"
+      - "토큰 사용량 로깅"
+
+  - id: "TASK-010"
+    name: "자동 번역 기능"
+    description: "논문 텍스트 번역 기능"
+    feature: "F-005"
+    type: "fullstack"
+    status: "pending"
+    priority: "high"
+    dependencies: ["TASK-007", "TASK-009"]
+
+    spec_refs:
+      - "functional-spec.yaml#F-005"
+      - "ui-spec.yaml#SCR-002.components.translation_toggle"
+      - "technical-spec.yaml#api_spec.endpoints[4]"
+      - "templates/design-system/qds4-web.yaml"  # UI 작업 시 필수 참조
+
+    acceptance_criteria:
+      - "Given 논문이 뷰어에 로드되었을 때, When 번역 언어를 선택하면, Then 전체 논문이 해당 언어로 번역되어 표시된다"
+      - "Given 번역된 논문을 보고 있을 때, When 원문 보기를 클릭하면, Then 원문과 번역문을 함께 볼 수 있다"
+
+    subtasks:
+      - "POST /api/papers/{id}/translate 엔드포인트"
+      - "Gemini API 번역 프롬프트"
+      - "번역 토글 UI"
+      - "원문/번역 병행 표시"
+      - "번역 결과 캐싱"
+
+  - id: "TASK-011"
+    name: "핵심 하이라이트 기능"
+    description: "AI 기반 핵심 문장 하이라이트"
+    feature: "F-006"
+    type: "fullstack"
+    status: "pending"
+    priority: "medium"
+    dependencies: ["TASK-007", "TASK-009"]
+
+    spec_refs:
+      - "functional-spec.yaml#F-006"
+      - "ui-spec.yaml#SCR-002.components.pdf_viewer"
+      - "templates/design-system/qds4-web.yaml"  # UI 작업 시 필수 참조
+
+    acceptance_criteria:
+      - "Given 논문이 뷰어에 로드되었을 때, When AI 분석이 완료되면, Then 핵심 문장들이 하이라이트되어 표시된다"
+      - "Given 하이라이트된 문장을 호버하면, When 툴팁이 표시되면, Then 하이라이트 이유가 표시된다"
+
+    subtasks:
+      - "핵심 문장 추출 프롬프트"
+      - "하이라이트 렌더링"
+      - "하이라이트 토글 UI"
+      - "호버 시 이유 툴팁"
+
+  - id: "TASK-012"
+    name: "논문 요약 기능"
+    description: "전체 및 섹션별 요약 생성"
+    feature: "F-007"
+    type: "fullstack"
+    status: "pending"
+    priority: "medium"
+    dependencies: ["TASK-007", "TASK-009"]
+
+    spec_refs:
+      - "functional-spec.yaml#F-007"
+      - "ui-spec.yaml#SCR-002.components.side_panel"
+      - "templates/design-system/qds4-web.yaml"  # UI 작업 시 필수 참조
+
+    acceptance_criteria:
+      - "Given 논문이 뷰어에 로드되었을 때, When 요약 패널을 열면, Then 논문 전체 요약과 섹션별 요약이 표시된다"
+      - "Given 섹션 요약을 클릭하면, When 해당 섹션으로 이동하면, Then 스크롤이 이동한다"
+
+    subtasks:
+      - "요약 생성 프롬프트"
+      - "사이드 패널 UI"
+      - "섹션별 아코디언"
+      - "섹션 클릭 시 스크롤 연동"
+
+  - id: "TASK-013"
+    name: "키워드 추출 및 설명"
+    description: "핵심 키워드 추출 및 맥락 기반 설명"
+    feature: "F-008"
+    type: "fullstack"
+    status: "pending"
+    priority: "medium"
+    dependencies: ["TASK-007", "TASK-009"]
+
+    spec_refs:
+      - "functional-spec.yaml#F-008"
+      - "ui-spec.yaml#SCR-002.components.side_panel"
+      - "technical-spec.yaml#api_spec.endpoints[7]"
+      - "templates/design-system/qds4-web.yaml"  # UI 작업 시 필수 참조
+
+    acceptance_criteria:
+      - "Given 논문이 뷰어에 로드되었을 때, When AI 분석이 완료되면, Then 핵심 키워드 목록이 추출되어 표시된다"
+      - "Given 키워드 목록이 표시되었을 때, When 키워드를 클릭하면, Then 논문 맥락 내에서의 키워드 설명이 표시된다"
+
+    subtasks:
+      - "키워드 추출 프롬프트"
+      - "키워드 목록 UI"
+      - "GET /api/papers/{id}/keywords/{term}/explain 엔드포인트"
+      - "키워드 설명 모달/패널"
+
+  # ========================================
+  # Phase 5: 부가 기능
+  # ========================================
+  - id: "TASK-014"
+    name: "내 논문 목록 페이지"
+    description: "업로드한 논문 목록 관리"
+    feature: null
+    type: "fullstack"
+    status: "pending"
+    priority: "medium"
+    dependencies: ["TASK-005"]
+
+    spec_refs:
+      - "ui-spec.yaml#SCR-003"
+      - "templates/design-system/qds4-web.yaml"  # UI 작업 시 필수 참조
+
+    acceptance_criteria:
+      - "Given 로그인한 사용자가 /papers에 접근하면, When 페이지가 로드되면, Then 업로드한 논문 목록이 표시된다"
+      - "Given 논문 카드를 클릭하면, When 이동하면, Then 해당 논문 뷰어로 이동한다"
+
+    subtasks:
+      - "/papers 페이지"
+      - "논문 목록 API (GET /api/papers)"
+      - "논문 카드 컴포넌트"
+      - "논문 삭제 기능"
+      - "검색/필터 기능"
+
+  - id: "TASK-015"
+    name: "반응형 디자인 및 최종 마무리"
+    description: "모바일/태블릿 대응 및 최종 QA"
+    feature: null
+    type: "frontend"
+    status: "pending"
+    priority: "low"
+    dependencies: ["TASK-014"]
+
+    spec_refs:
+      - "ui-spec.yaml#screens.responsive"
+      - "templates/design-system/qds4-web.yaml"  # UI 작업 시 필수 참조
+
+    acceptance_criteria:
+      - "Given 모바일 기기에서 접속하면, When 화면이 렌더링되면, Then 모바일 레이아웃이 적용된다"
+      - "Given 모든 기능을 테스트하면, When 검증하면, Then acceptance criteria가 충족된다"
+
+    subtasks:
+      - "모바일 레이아웃 조정"
+      - "태블릿 레이아웃 조정"
+      - "접근성 검토 (키보드 네비게이션)"
+      - "최종 버그 수정"
+
+metadata:
+  created_at: "2025-01-13T11:35:00+09:00"
+  author: "assistant"
+  status: "draft"
+  total_tasks: 16
+  estimated_phases: 5
+
+  phase_summary:
+    - phase: 0
+      name: "프로젝트 초기 설정"
+      tasks: ["TASK-000"]
+    - phase: 1
+      name: "기본 인프라"
+      tasks: ["TASK-001", "TASK-002"]
+    - phase: 2
+      name: "PDF 업로드"
+      tasks: ["TASK-003", "TASK-004", "TASK-005", "TASK-006"]
+    - phase: 3
+      name: "PDF 뷰어"
+      tasks: ["TASK-007", "TASK-008"]
+    - phase: 4
+      name: "AI 기능"
+      tasks: ["TASK-009", "TASK-010", "TASK-011", "TASK-012", "TASK-013"]
+    - phase: 5
+      name: "부가 기능"
+      tasks: ["TASK-014", "TASK-015"]

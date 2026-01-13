@@ -1,0 +1,364 @@
+# /spec-specification
+
+Discovery 단계 결과를 바탕으로 Specification 단계(Stage 4-6) 스펙을 생성합니다.
+
+## 개요
+
+이 명령어는 다음 파일들을 생성합니다:
+1. `specs/02-specification/functional-spec.yaml` (Stage 4)
+2. `specs/02-specification/technical-spec.yaml` (Stage 5)
+3. `specs/02-specification/ui-spec.yaml` (Stage 6)
+4. `specs/02-specification/adrs/ADR-001-*.md` (필요시)
+
+## 실행 조건
+
+- `specs/01-discovery/requirements.yaml`이 존재해야 함
+- 없으면 `/spec-discovery`를 먼저 실행하라고 안내
+
+## 사전 확인
+
+실행 시 먼저 Discovery 스펙들을 읽고 요약을 보여줍니다:
+```
+📋 Discovery 스펙 확인
+
+프로젝트: [idea-crystal.core_value]
+타겟 사용자: [idea-crystal.target_user]
+핵심 지표: [problem-definition.success_metrics 요약]
+
+User Stories (Must-have):
+- US-001: [i_want 요약]
+- US-002: [i_want 요약]
+...
+
+기술 제약: [constraints.technical 요약]
+
+이 내용을 기반으로 상세 명세를 생성합니다. 진행할까요?
+```
+
+---
+
+## 프로세스
+
+### Stage 4: 기능 명세 (functional-spec.yaml)
+
+requirements.yaml의 각 user_story를 분석하여 기능으로 분해합니다.
+
+**분해 규칙:**
+1. 하나의 User Story는 1~3개의 Feature로 분해
+2. 각 Feature는 독립적으로 구현/테스트 가능해야 함
+3. Feature 간 의존성을 명시
+
+**사용자 확인 질문:**
+"US-001을 다음과 같이 분해했습니다:
+- F-001: PDF 업로드 처리
+- F-002: PDF 파싱 및 구조화
+맞나요? 수정이 필요하면 말씀해주세요."
+
+각 Feature에 대해 자동 생성:
+```yaml
+features:
+  - id: "F-001"
+    name: "[기능 이름]"
+    description: "[기능 설명]"
+    parent_story: "US-001"
+    dependencies: []
+    
+    # 상태 다이어그램 - 필수!
+    states:
+      - name: "idle"
+        description: "초기 상태"
+        transitions:
+          - trigger: "[이벤트]"
+            target: "[다음 상태]"
+            condition: null
+      - name: "processing"
+        description: "처리 중"
+        transitions:
+          - trigger: "success"
+            target: "completed"
+            condition: null
+          - trigger: "error"
+            target: "error"
+            condition: null
+      - name: "completed"
+        description: "완료"
+        transitions:
+          - trigger: "reset"
+            target: "idle"
+            condition: null
+      - name: "error"
+        description: "에러 상태"
+        transitions:
+          - trigger: "retry"
+            target: "idle"
+            condition: null
+    
+    # 입출력 정의
+    inputs:
+      - name: "[입력명]"
+        type: "[타입]"
+        validation: "[검증 규칙]"
+        required: true
+    
+    outputs:
+      - name: "[출력명]"
+        type: "[타입]"
+        format: |
+          {
+            "field": "type"
+          }
+    
+    # 에러 케이스 - 최소 3개 필수!
+    error_cases:
+      - condition: "[에러 조건 1]"
+        error_code: "[ERROR_CODE_1]"
+        user_message: "[사용자 메시지]"
+        recovery_action: "[복구 방법]"
+      - condition: "[에러 조건 2]"
+        error_code: "[ERROR_CODE_2]"
+        user_message: "[사용자 메시지]"
+        recovery_action: "[복구 방법]"
+      - condition: "[에러 조건 3]"
+        error_code: "[ERROR_CODE_3]"
+        user_message: "[사용자 메시지]"
+        recovery_action: "[복구 방법]"
+    
+    # 엣지 케이스 - 최소 2개 필수!
+    edge_cases:
+      - scenario: "[경계 조건 1]"
+        expected_behavior: "[예상 동작]"
+      - scenario: "[경계 조건 2]"
+        expected_behavior: "[예상 동작]"
+    
+    # 성능 요구사항
+    performance:
+      - metric: "[지표]"
+        threshold: "[기준값]"
+```
+
+**생성 규칙:**
+- 모든 Feature는 반드시 `states` 포함 (상태 다이어그램)
+- 모든 Feature는 반드시 `error_cases` 3개 이상
+- 모든 Feature는 반드시 `edge_cases` 2개 이상
+- acceptance_criteria의 Given-When-Then을 states와 매핑
+
+---
+
+### Stage 5: 기술 명세 (technical-spec.yaml)
+
+**사용자 확인 질문:**
+"기술 스택을 확인합니다. constraints.technical에서 다음을 확인했습니다:
+- Framework: Next.js
+- 추가로 확인이 필요한 것:
+  - 데이터베이스는 무엇을 사용하나요? (예: Supabase, PostgreSQL, MongoDB)
+  - AI API는 무엇을 사용하나요? (예: Claude API, OpenAI)"
+
+사용자 답변 후 생성:
+```yaml
+technical_spec:
+  architecture:
+    type: "[monolith|serverless]"
+    
+    diagram: |
+      flowchart TB
+        Client[Next.js Client]
+        API[API Routes]
+        DB[(Database)]
+        AI[AI Service]
+        
+        Client --> API
+        API --> DB
+        API --> AI
+    
+    components:
+      - name: "[컴포넌트명]"
+        responsibility: "[역할]"
+        technology: "[기술]"
+        interfaces:
+          provides: ["[제공 인터페이스]"]
+          consumes: ["[사용 인터페이스]"]
+
+  data_model:
+    entities:
+      - name: "[엔티티명]"
+        description: "[설명]"
+        attributes:
+          - name: "id"
+            type: "UUID"
+            constraints: "PRIMARY KEY"
+          - name: "[속성명]"
+            type: "[타입]"
+            constraints: "[제약조건]"
+        relationships:
+          - type: "[1:1|1:N|M:N]"
+            target: "[대상 엔티티]"
+            description: "[관계 설명]"
+
+  api_spec:
+    base_url: "/api"
+    
+    endpoints:
+      # 각 Feature당 최소 1개 엔드포인트
+      - path: "/[경로]"
+        method: "[GET|POST|PUT|DELETE]"
+        description: "[설명]"
+        auth_required: true
+        
+        request:
+          headers:
+            Content-Type: "application/json"
+          body:
+            "[필드]": "[타입]"
+        
+        response:
+          success:
+            status: 200
+            body:
+              "[필드]": "[타입]"
+          errors:
+            - status: 400
+              code: "[ERROR_CODE]"
+              body:
+                message: "[에러 메시지]"
+
+  adrs:
+    - id: "ADR-001"
+      title: "[결정 제목]"
+      status: "accepted"
+      reference: "./adrs/ADR-001-[slug].md"
+```
+
+**ADR 자동 생성 조건:**
+- 데이터베이스 선택 시 → ADR-001
+- AI 모델 선택 시 → ADR-002
+- 주요 라이브러리 선택 시 → ADR-003
+
+---
+
+### Stage 6: UI 명세 (ui-spec.yaml)
+
+기능 명세를 기반으로 필요한 화면과 컴포넌트를 도출합니다.
+
+**도출 규칙:**
+1. 각 Feature의 states를 UI 상태로 매핑
+2. 각 Feature의 inputs를 폼/입력 컴포넌트로 매핑
+3. 각 Feature의 error_cases를 에러 UI로 매핑
+```yaml
+ui_spec:
+  design_tokens:
+    colors:
+      primary: "#[색상]"
+      secondary: "#[색상]"
+      error: "#EF4444"
+    spacing:
+      unit: "4px"
+    breakpoints:
+      mobile: "640px"
+      tablet: "768px"
+      desktop: "1024px"
+
+  screens:
+    - id: "SCR-001"
+      name: "[화면 이름]"
+      route: "/[경로]"
+      description: "[화면 설명]"
+      implements_features: ["F-001", "F-002"]
+      
+      components:
+        - id: "[컴포넌트 ID]"
+          type: "[컴포넌트 타입]"
+          description: "[설명]"
+          
+          props:
+            "[prop명]": "[타입]"
+          
+          states:
+            - name: "default"
+              appearance: "[기본 모습]"
+              behavior: "[기본 동작]"
+            - name: "loading"
+              appearance: "[로딩 모습]"
+              behavior: "[로딩 동작]"
+            - name: "error"
+              appearance: "[에러 모습]"
+              behavior: "[에러 동작]"
+      
+      interactions:
+        - trigger: "[사용자 액션]"
+          action: "[시스템 동작]"
+          feedback: "[사용자 피드백]"
+      
+      responsive:
+        mobile: "[모바일 레이아웃]"
+        tablet: "[태블릿 레이아웃]"
+        desktop: "[데스크톱 레이아웃]"
+      
+      accessibility:
+        focus_order: ["[컴포넌트 순서]"]
+        aria_labels:
+          "[컴포넌트ID]": "[접근성 레이블]"
+```
+
+---
+
+## 생성 규칙 요약
+
+| 항목 | 규칙 |
+|------|------|
+| Feature 분해 | User Story당 1~3개 |
+| States | 모든 Feature 필수, 최소 3개 상태 |
+| Error Cases | Feature당 최소 3개 |
+| Edge Cases | Feature당 최소 2개 |
+| API Endpoints | Feature당 최소 1개 |
+| ADR | 주요 기술 선택마다 1개 |
+| Screen | 관련 Feature들을 그룹핑 |
+
+## 완료 메시지
+```
+✅ Specification 단계 완료!
+
+생성된 파일:
+- specs/02-specification/functional-spec.yaml
+  - Features: 5개
+  - 총 States: 18개
+  - 총 Error Cases: 15개
+  
+- specs/02-specification/technical-spec.yaml
+  - Components: 4개
+  - Entities: 3개
+  - API Endpoints: 6개
+  
+- specs/02-specification/ui-spec.yaml
+  - Screens: 3개
+  - Components: 12개
+
+- specs/02-specification/adrs/
+  - ADR-001-database-selection.md
+  - ADR-002-ai-model-selection.md
+
+다음 단계:
+1. 생성된 파일들을 검토하세요
+2. 특히 error_cases와 edge_cases가 충분한지 확인하세요
+3. `/implement TASK-001` 명령으로 구현을 시작하세요
+
+💡 팁: functional-spec.yaml의 states가 정확할수록
+   구현 시 상태 관리 코드가 정확하게 생성됩니다.
+```
+
+## 에러 처리
+
+- Discovery 스펙이 없으면: `/spec-discovery`를 먼저 실행하라고 안내
+- requirements.yaml이 불완전하면: 누락된 부분 지적 후 수정 요청
+- 이미 파일이 존재하면: 덮어쓸지 확인
+
+## 도구 사용 (향후 MCP 연동 시)
+
+스펙 파일 생성 후:
+- `validate_spec` 도구가 있으면 각 파일 검증
+- `check_references` 도구가 있으면 US↔F 매핑 검증
+- `build_traceability` 도구가 있으면 매트릭스 업데이트
+
+도구가 없으면:
+- ID 참조 수동 확인 (US-001 → F-001 등)
+- 필수 필드 존재 확인
+- 사용자에게 검토 요청

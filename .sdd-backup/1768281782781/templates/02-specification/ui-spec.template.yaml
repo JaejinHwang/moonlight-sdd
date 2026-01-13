@@ -1,0 +1,81 @@
+# ============================================================
+# UI/UX Specification (UI 명세)
+# Stage 6: 화면 구성과 인터랙션 정의
+# ============================================================
+# 의존성: functional-spec.yaml 기반으로 작성
+# ============================================================
+
+ui_spec:
+  # 전역 디자인 토큰 (선택)
+  design_tokens:
+    colors:
+      primary: "{{primary_color}}"
+      secondary: "{{secondary_color}}"
+      error: "{{error_color}}"
+    spacing:
+      unit: "{{spacing_unit}}"  # 예: "4px"
+    breakpoints:
+      mobile: "{{mobile_breakpoint}}"    # 예: "640px"
+      tablet: "{{tablet_breakpoint}}"    # 예: "768px"
+      desktop: "{{desktop_breakpoint}}"  # 예: "1024px"
+
+  # 화면 목록
+  screens:
+    - id: "SCR-001"
+      name: "{{screen_name}}"
+      route: "{{route_path}}"  # 예: "/upload"
+      description: "{{screen_description}}"
+      
+      # 이 화면이 구현하는 기능
+      implements_features: ["F-001"]
+      
+      # 화면 구성 컴포넌트
+      components:
+        - id: "{{component_id}}"
+          type: "{{component_type}}"  # 예: "button", "form", "modal"
+          description: "{{component_description}}"
+          
+          # 컴포넌트 속성
+          props:
+            "{{prop_name}}": "{{prop_type}}"
+          
+          # 상태별 모습
+          states:
+            - name: "default"
+              appearance: "{{how_it_looks}}"
+              behavior: "{{how_it_behaves}}"
+            - name: "{{state_name}}"
+              appearance: "{{how_it_looks}}"
+              behavior: "{{how_it_behaves}}"
+      
+      # 사용자 인터랙션
+      interactions:
+        - trigger: "{{user_action}}"  # 예: "click submit button"
+          action: "{{system_action}}"  # 예: "validate form and submit"
+          feedback: "{{user_feedback}}"  # 예: "show loading spinner"
+      
+      # 반응형 규칙
+      responsive:
+        mobile: "{{mobile_layout_description}}"
+        tablet: "{{tablet_layout_description}}"
+        desktop: "{{desktop_layout_description}}"
+      
+      # 접근성
+      accessibility:
+        focus_order:
+          - "{{component_id_1}}"
+          - "{{component_id_2}}"
+        aria_labels:
+          "{{component_id}}": "{{aria_label}}"
+        keyboard_shortcuts:
+          "{{key_combination}}": "{{action}}"
+
+# ============================================================
+# 메타데이터
+# ============================================================
+metadata:
+  created_at: "{{created_at}}"
+  author: "{{author}}"
+  status: "draft"
+  depends_on:
+    - "functional-spec.yaml"

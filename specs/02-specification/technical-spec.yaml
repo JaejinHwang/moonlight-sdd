@@ -1,0 +1,498 @@
+# ============================================================
+# Technical Specification (기술 명세)
+# Stage 5: 시스템 아키텍처와 기술 구현 상세
+# ============================================================
+# 의존성: functional-spec.yaml 기반으로 작성
+# ============================================================
+# 중요: 프론트엔드 구현 시 @qanda/qds4-web 디자인 시스템 필수 사용
+# 레퍼런스: templates/design-system/qds4-web.yaml
+# ============================================================
+
+technical_spec:
+  architecture:
+    type: "serverless"
+
+    diagram: |
+      flowchart TB
+        subgraph Client["Next.js Client (Browser)"]
+          UI[React Components + QDS4]
+          Store[Zustand Store]
+          PDFViewer[PDF.js Viewer]
+        end
+
+        subgraph Server["Next.js Server"]
+          API[API Routes]
+          Auth[Auth Middleware]
+        end
+
+        subgraph External["External Services"]
+          Supabase[(Supabase)]
+          Storage[Supabase Storage]
+          Gemini[Gemini API]
+        end
+
+        UI --> Store
+        UI --> PDFViewer
+        Store --> API
+        API --> Auth
+        Auth --> Supabase
+        API --> Storage
+        API --> Gemini
+
+    components:
+      - name: "Next.js Client"
+        responsibility: "사용자 인터페이스 렌더링, 상태 관리"
+        technology: "Next.js 14+ (App Router), React 18, TypeScript"
+        # 중요: UI 구현 시 반드시 @qanda/qds4-web 디자인 시스템만 사용
+        design_system:
+          package: "@qanda/qds4-web"
+          version: "^0.0.2"
+          reference: "templates/design-system/qds4-web.yaml"
+          docs: "https://github.com/mathpresso/qanda-design-system-docs"
+        interfaces:
+          provides: ["User Interface", "PDF Viewer"]
+          consumes: ["API Routes", "Supabase Realtime"]
+
+      - name: "API Routes"
+        responsibility: "비즈니스 로직, AI API 호출, 데이터 처리"
+        technology: "Next.js API Routes (Route Handlers)"
+        interfaces:
+          provides: ["REST API Endpoints"]
+          consumes: ["Supabase", "Gemini API", "Supabase Storage"]
+
+      - name: "Supabase"
+        responsibility: "데이터 저장, 인증, 실시간 동기화"
+        technology: "Supabase (PostgreSQL)"
+        interfaces:
+          provides: ["Database", "Auth", "Realtime"]
+          consumes: []
+
+      - name: "Supabase Storage"
+        responsibility: "PDF 파일 저장"
+        technology: "Supabase Storage"
+        interfaces:
+          provides: ["File Storage"]
+          consumes: []
+
+      - name: "Gemini API"
+        responsibility: "번역, 요약, 키워드 추출, 하이라이트 분석"
+        technology: "Google Gemini API"
+        interfaces:
+          provides: ["AI Text Processing"]
+          consumes: []
+
+  data_model:
+    entities:
+      - name: "User"
+        description: "서비스 사용자"
+        attributes:
+          - name: "id"
+            type: "UUID"
+            constraints: "PRIMARY KEY"
+          - name: "email"
+            type: "VARCHAR(255)"
+            constraints: "UNIQUE, NOT NULL"
+          - name: "created_at"
+            type: "TIMESTAMP"
+            constraints: "DEFAULT NOW()"
+          - name: "updated_at"
+            type: "TIMESTAMP"
+            constraints: "DEFAULT NOW()"
+        relationships:
+          - type: "1:N"
+            target: "Paper"
+            description: "사용자는 여러 논문을 가질 수 있음"
+
+      - name: "Paper"
+        description: "업로드된 논문"
+        attributes:
+          - name: "id"
+            type: "UUID"
+            constraints: "PRIMARY KEY"
+          - name: "user_id"
+            type: "UUID"
+            constraints: "FOREIGN KEY REFERENCES User(id)"
+          - name: "title"
+            type: "VARCHAR(500)"
+            constraints: "NOT NULL"
+          - name: "source_url"
+            type: "TEXT"
+            constraints: "NULLABLE"
+          - name: "file_path"
+            type: "TEXT"
+            constraints: "NOT NULL"
+          - name: "file_size"
+            type: "INTEGER"
+            constraints: "NOT NULL"
+          - name: "page_count"
+            type: "INTEGER"
+            constraints: "NOT NULL"
+          - name: "language"
+            type: "VARCHAR(10)"
+            constraints: "DEFAULT 'en'"
+          - name: "status"
+            type: "VARCHAR(20)"
+            constraints: "DEFAULT 'processing'"
+          - name: "created_at"
+            type: "TIMESTAMP"
+            constraints: "DEFAULT NOW()"
+          - name: "updated_at"
+            type: "TIMESTAMP"
+            constraints: "DEFAULT NOW()"
+        relationships:
+          - type: "1:N"
+            target: "Section"
+            description: "논문은 여러 섹션을 가짐"
+          - type: "1:N"
+            target: "Translation"
+            description: "논문은 여러 번역을 가질 수 있음"
+          - type: "1:1"
+            target: "Analysis"
+            description: "논문은 하나의 AI 분석 결과를 가짐"
+
+      - name: "Section"
+        description: "논문의 섹션 (챕터)"
+        attributes:
+          - name: "id"
+            type: "UUID"
+            constraints: "PRIMARY KEY"
+          - name: "paper_id"
+            type: "UUID"
+            constraints: "FOREIGN KEY REFERENCES Paper(id)"
+          - name: "title"
+            type: "VARCHAR(500)"
+            constraints: "NOT NULL"
+          - name: "level"
+            type: "INTEGER"
+            constraints: "NOT NULL, DEFAULT 1"
+          - name: "order_index"
+            type: "INTEGER"
+            constraints: "NOT NULL"
+          - name: "content"
+            type: "TEXT"
+            constraints: "NOT NULL"
+          - name: "page_start"
+            type: "INTEGER"
+            constraints: "NOT NULL"
+          - name: "page_end"
+            type: "INTEGER"
+            constraints: "NOT NULL"
+        relationships:
+          - type: "N:1"
+            target: "Paper"
+            description: "섹션은 하나의 논문에 속함"
+
+      - name: "Translation"
+        description: "번역된 텍스트"
+        attributes:
+          - name: "id"
+            type: "UUID"
+            constraints: "PRIMARY KEY"
+          - name: "paper_id"
+            type: "UUID"
+            constraints: "FOREIGN KEY REFERENCES Paper(id)"
+          - name: "section_id"
+            type: "UUID"
+            constraints: "FOREIGN KEY REFERENCES Section(id), NULLABLE"
+          - name: "original_text"
+            type: "TEXT"
+            constraints: "NOT NULL"
+          - name: "translated_text"
+            type: "TEXT"
+            constraints: "NOT NULL"
+          - name: "source_lang"
+            type: "VARCHAR(10)"
+            constraints: "NOT NULL"
+          - name: "target_lang"
+            type: "VARCHAR(10)"
+            constraints: "NOT NULL"
+          - name: "created_at"
+            type: "TIMESTAMP"
+            constraints: "DEFAULT NOW()"
+        relationships:
+          - type: "N:1"
+            target: "Paper"
+            description: "번역은 하나의 논문에 속함"
+
+      - name: "Analysis"
+        description: "AI 분석 결과 (요약, 하이라이트, 키워드)"
+        attributes:
+          - name: "id"
+            type: "UUID"
+            constraints: "PRIMARY KEY"
+          - name: "paper_id"
+            type: "UUID"
+            constraints: "FOREIGN KEY REFERENCES Paper(id), UNIQUE"
+          - name: "overall_summary"
+            type: "TEXT"
+            constraints: "NULLABLE"
+          - name: "section_summaries"
+            type: "JSONB"
+            constraints: "DEFAULT '[]'"
+          - name: "highlights"
+            type: "JSONB"
+            constraints: "DEFAULT '[]'"
+          - name: "keywords"
+            type: "JSONB"
+            constraints: "DEFAULT '[]'"
+          - name: "status"
+            type: "VARCHAR(20)"
+            constraints: "DEFAULT 'pending'"
+          - name: "created_at"
+            type: "TIMESTAMP"
+            constraints: "DEFAULT NOW()"
+          - name: "updated_at"
+            type: "TIMESTAMP"
+            constraints: "DEFAULT NOW()"
+        relationships:
+          - type: "1:1"
+            target: "Paper"
+            description: "분석 결과는 하나의 논문에 속함"
+
+  api_spec:
+    base_url: "/api"
+
+    endpoints:
+      # Paper 관련 API
+      - path: "/papers"
+        method: "POST"
+        description: "PDF 파일 업로드 및 논문 생성"
+        feature: "F-001"
+        auth_required: true
+
+        request:
+          headers:
+            Content-Type: "multipart/form-data"
+          body:
+            file: "File (PDF)"
+
+        response:
+          success:
+            status: 201
+            body:
+              id: "UUID"
+              title: "string"
+              status: "processing"
+              created_at: "timestamp"
+          errors:
+            - status: 400
+              code: "INVALID_FILE_TYPE"
+              body:
+                message: "PDF 파일만 업로드할 수 있습니다."
+            - status: 400
+              code: "FILE_TOO_LARGE"
+              body:
+                message: "파일 크기가 10MB를 초과합니다."
+            - status: 401
+              code: "UNAUTHORIZED"
+              body:
+                message: "로그인이 필요합니다."
+
+      - path: "/papers/url"
+        method: "POST"
+        description: "URL로 논문 다운로드 및 생성"
+        feature: "F-002"
+        auth_required: true
+
+        request:
+          headers:
+            Content-Type: "application/json"
+          body:
+            url: "string"
+
+        response:
+          success:
+            status: 201
+            body:
+              id: "UUID"
+              title: "string"
+              source_url: "string"
+              status: "processing"
+          errors:
+            - status: 400
+              code: "INVALID_URL"
+              body:
+                message: "올바른 URL을 입력해주세요."
+            - status: 404
+              code: "PDF_NOT_FOUND"
+              body:
+                message: "해당 URL에서 PDF를 찾을 수 없습니다."
+
+      - path: "/papers/{id}"
+        method: "GET"
+        description: "논문 상세 정보 조회"
+        feature: "F-003"
+        auth_required: true
+
+        request:
+          headers:
+            Authorization: "Bearer {token}"
+
+        response:
+          success:
+            status: 200
+            body:
+              id: "UUID"
+              title: "string"
+              sections: "Section[]"
+              status: "string"
+              analysis: "Analysis | null"
+          errors:
+            - status: 404
+              code: "PAPER_NOT_FOUND"
+              body:
+                message: "논문을 찾을 수 없습니다."
+
+      - path: "/papers/{id}"
+        method: "DELETE"
+        description: "논문 삭제"
+        feature: "F-001"
+        auth_required: true
+
+        response:
+          success:
+            status: 204
+            body: null
+          errors:
+            - status: 404
+              code: "PAPER_NOT_FOUND"
+              body:
+                message: "논문을 찾을 수 없습니다."
+
+      # Translation API
+      - path: "/papers/{id}/translate"
+        method: "POST"
+        description: "논문 번역 요청"
+        feature: "F-005"
+        auth_required: true
+
+        request:
+          headers:
+            Content-Type: "application/json"
+          body:
+            target_lang: "string (ISO 639-1)"
+            section_id: "UUID | null (전체 번역 시 null)"
+
+        response:
+          success:
+            status: 200
+            body:
+              translations: "Translation[]"
+          errors:
+            - status: 400
+              code: "UNSUPPORTED_LANGUAGE"
+              body:
+                message: "해당 언어는 지원하지 않습니다."
+            - status: 429
+              code: "QUOTA_EXCEEDED"
+              body:
+                message: "일일 번역 한도에 도달했습니다."
+
+      # Analysis API
+      - path: "/papers/{id}/analyze"
+        method: "POST"
+        description: "논문 AI 분석 요청 (요약, 하이라이트, 키워드)"
+        feature: "F-006, F-007, F-008"
+        auth_required: true
+
+        request:
+          headers:
+            Content-Type: "application/json"
+          body:
+            types: "string[] ('summary' | 'highlights' | 'keywords')"
+
+        response:
+          success:
+            status: 200
+            body:
+              analysis_id: "UUID"
+              status: "processing"
+          errors:
+            - status: 400
+              code: "ANALYSIS_IN_PROGRESS"
+              body:
+                message: "분석이 이미 진행 중입니다."
+
+      - path: "/papers/{id}/analysis"
+        method: "GET"
+        description: "논문 분석 결과 조회"
+        feature: "F-006, F-007, F-008"
+        auth_required: true
+
+        response:
+          success:
+            status: 200
+            body:
+              overall_summary: "string | null"
+              section_summaries: "SectionSummary[]"
+              highlights: "Highlight[]"
+              keywords: "Keyword[]"
+              status: "string"
+          errors:
+            - status: 404
+              code: "ANALYSIS_NOT_FOUND"
+              body:
+                message: "분석 결과가 없습니다."
+
+      # Keyword explanation API
+      - path: "/papers/{id}/keywords/{term}/explain"
+        method: "GET"
+        description: "키워드 상세 설명 조회"
+        feature: "F-008"
+        auth_required: true
+
+        response:
+          success:
+            status: 200
+            body:
+              term: "string"
+              definition: "string"
+              context_in_paper: "string"
+              related_terms: "string[]"
+          errors:
+            - status: 404
+              code: "KEYWORD_NOT_FOUND"
+              body:
+                message: "키워드를 찾을 수 없습니다."
+
+  # 프론트엔드 의존성
+  # UI 구현 시 반드시 QDS4 디자인 시스템 사용
+  frontend_dependencies:
+    design_system:
+      package: "@qanda/qds4-web"
+      version: "^0.0.2"
+      reference: "templates/design-system/qds4-web.yaml"
+      setup: |
+        // app/layout.tsx
+        import '@qanda/qds4-web/base.css';
+        import { DesignSystemProvider } from '@qanda/qds4-web/DesignSystemProvider';
+      rules:
+        - "모든 UI 컴포넌트는 QDS4 컴포넌트만 사용"
+        - "색상은 COLOR 토큰만 사용 (하드코딩 금지)"
+        - "타이포그래피는 typography() 함수만 사용"
+        - "다른 UI 라이브러리 (shadcn/ui 등) 사용 금지"
+
+  # 기술 의사결정 기록
+  adrs:
+    - id: "ADR-001"
+      title: "데이터베이스 선택: Supabase"
+      status: "accepted"
+      reference: "./adrs/ADR-001-database-selection.md"
+    - id: "ADR-002"
+      title: "AI 모델 선택: Gemini API"
+      status: "accepted"
+      reference: "./adrs/ADR-002-ai-model-selection.md"
+
+# ============================================================
+# 메타데이터
+# ============================================================
+metadata:
+  created_at: "2025-01-13T11:25:00+09:00"
+  author: "assistant"
+  status: "draft"
+  depends_on:
+    - "functional-spec.yaml"
+  statistics:
+    total_components: 5
+    total_entities: 5
+    total_endpoints: 8

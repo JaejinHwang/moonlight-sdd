@@ -1,0 +1,96 @@
+# ============================================================
+# Technical Specification (기술 명세)
+# Stage 5: 시스템 아키텍처와 기술 구현 상세
+# ============================================================
+# 의존성: functional-spec.yaml 기반으로 작성
+# ============================================================
+
+technical_spec:
+  # 시스템 아키텍처
+  architecture:
+    type: "{{monolith|microservices|serverless}}"
+    
+    # Mermaid 다이어그램 형식
+    diagram: |
+      flowchart TB
+        Client[{{client_name}}]
+        API[{{api_layer}}]
+        DB[({{database}})]
+        
+        Client --> API
+        API --> DB
+    
+    # 주요 컴포넌트
+    components:
+      - name: "{{component_name}}"
+        responsibility: "{{what_this_component_does}}"
+        technology: "{{tech_stack}}"  # 예: "Next.js API Routes"
+        interfaces:
+          provides:
+            - "{{interface_it_exposes}}"
+          consumes:
+            - "{{interface_it_uses}}"
+
+  # 데이터 모델
+  data_model:
+    entities:
+      - name: "{{entity_name}}"
+        description: "{{entity_description}}"
+        attributes:
+          - name: "id"
+            type: "UUID"
+            constraints: "PRIMARY KEY"
+          - name: "{{attribute_name}}"
+            type: "{{attribute_type}}"
+            constraints: "{{constraints}}"  # 예: "NOT NULL", "UNIQUE"
+        relationships:
+          - type: "{{1:1|1:N|M:N}}"
+            target: "{{related_entity}}"
+            description: "{{relationship_description}}"
+
+  # API 명세
+  api_spec:
+    base_url: "{{base_url}}"  # 예: "/api/v1"
+    
+    endpoints:
+      - path: "{{endpoint_path}}"
+        method: "{{GET|POST|PUT|DELETE}}"
+        description: "{{endpoint_description}}"
+        auth_required: true
+        
+        request:
+          headers:
+            Content-Type: "application/json"
+          params: {}  # URL 파라미터
+          query: {}   # 쿼리스트링
+          body:
+            "{{field_name}}": "{{field_type}}"
+        
+        response:
+          success:
+            status: 200
+            body:
+              "{{field_name}}": "{{field_type}}"
+          errors:
+            - status: 400
+              code: "{{ERROR_CODE}}"
+              body:
+                message: "{{error_message}}"
+
+  # 기술 의사결정 기록
+  # 상세 내용은 adrs/ 폴더에 별도 문서로
+  adrs:
+    - id: "ADR-001"
+      title: "{{decision_title}}"
+      status: "accepted"  # proposed | accepted | deprecated | superseded
+      reference: "./adrs/ADR-001-{{slug}}.md"
+
+# ============================================================
+# 메타데이터
+# ============================================================
+metadata:
+  created_at: "{{created_at}}"
+  author: "{{author}}"
+  status: "draft"
+  depends_on:
+    - "functional-spec.yaml"

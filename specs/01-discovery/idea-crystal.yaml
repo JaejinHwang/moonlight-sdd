@@ -1,0 +1,12 @@
+idea_crystal:
+  core_value: "논문 읽기를 자동 번역, 핵심 요약, 도표 설명으로 쉽게 만든다"
+  target_user: "비전공 분야의 논문을 읽는 연구자 혹은 실무자"
+  existing_alternatives:
+    - name: "ChatGPT 복사-붙여넣기"
+      limitation: "논문 전체 맥락 파악 불가, 단편적 번역/설명만 가능"
+  differentiation_hypothesis: "논문 전체를 맥락으로 이해하는 AI가 번역, 요약, 도표 설명을 통합 제공하면 최적의 논문 읽기 경험을 만들 수 있다"
+
+metadata:
+  created_at: "2025-01-13T11:00:00+09:00"
+  author: "user"
+  status: "draft"

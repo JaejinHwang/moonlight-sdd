@@ -1,0 +1,161 @@
+# ============================================================
+# UI/UX Specification (UI 명세)
+# Stage 6: 화면 구성과 인터랙션 정의
+# ============================================================
+# 의존성: functional-spec.yaml 기반으로 작성
+# ============================================================
+# 중요: UI 구현 시 반드시 @qanda/qds4-web 디자인 시스템만 사용
+# 레퍼런스: templates/design-system/qds4-web.yaml
+# 공식 문서: https://github.com/mathpresso/qanda-design-system-docs
+# 데모 페이지: https://mathpresso.github.io/qanda-design-system-docs
+# ============================================================
+
+ui_spec:
+  # ----------------------------------------------------------
+  # 디자인 시스템 (Design System)
+  # ----------------------------------------------------------
+  # 반드시 @qanda/qds4-web 컴포넌트와 토큰만 사용
+  # ----------------------------------------------------------
+  design_system:
+    package: "@qanda/qds4-web"
+    version: "^0.0.2"
+    reference: "templates/design-system/qds4-web.yaml"
+
+    # 사용 가능한 색상 팔레트 (COLOR 토큰 사용 필수)
+    # 전체 목록: gray, blue, orange, red, yellow, green (각 _0 ~ _100 또는 _5 ~ _95)
+    color_palette:
+      primary: "blue_50"       # 주요 액션, 링크
+      secondary: "gray_60"     # 보조 텍스트
+      error: "red_50"          # 에러 상태
+      warning: "orange_50"     # 경고 상태
+      success: "green_50"      # 성공 상태
+      background: "gray_100"   # 기본 배경
+      surface: "gray_95"       # 카드/섹션 배경
+      text_primary: "gray_10"  # 주요 텍스트
+      text_secondary: "gray_50" # 보조 텍스트
+
+    # 사용 가능한 타이포그래피 (typography() 함수 사용 필수)
+    typography_scale:
+      - "large_title"      # 페이지 메인 타이틀
+      - "title_1_strong"   # 강조 주요 제목
+      - "title_1"          # 주요 섹션 제목
+      - "title_2_strong"   # 강조 서브 제목
+      - "title_2"          # 서브 섹션 제목
+      - "title_3_strong"   # 강조 소제목
+      - "title_3"          # 소제목
+      - "body_1_strong"    # 강조 본문
+      - "body_1"           # 기본 본문
+      - "body_2_strong"    # 강조 작은 본문
+      - "body_2"           # 작은 본문
+      - "caption_1"        # 캡션
+      - "caption_2"        # 작은 캡션
+
+    # 사용 가능한 브레이크포인트 (BREAKPOINT 상수 사용)
+    breakpoints:
+      SMALL: "360px"        # 모바일
+      MEDIUM: "640px"       # 태블릿
+      LARGE: "1200px"       # 데스크톱
+      EXTRA_LARGE: "1600px" # 대형 화면
+
+    # 사용 가능한 컴포넌트 목록
+    # 상세 props는 qds4-web.yaml 참조
+    allowed_components:
+      buttons:
+        - "Button"           # variant: neutral|accent|danger|tonal|outlined, size: l|m|s|xs
+        - "TextButton"       # size: m|s
+        - "IconButton"       # style: clear|border, iconSize: 24|20|16
+        - "FloatingActionButton"  # color: neutral|accent
+      forms:
+        - "Checkbox"         # state: unselected|indeterminate|selected
+        - "Checkmark"        # checked: boolean
+        - "Radio"            # selectedValue matching
+        - "Switch"           # checked: boolean
+      navigation:
+        - "TopAppBar"        # main, leading, trailing
+        - "Tabs"             # type: scrollable|fixed, size: m|s
+        - "SegmentedControl" # size: m|s
+      dialogs:
+        - "AlertDialog"      # confirmButton, cancelButton
+        - "StandardDialog"   # size: s|m|l
+        - "FullScreenDialog" # isOpen, onClose
+        - "BottomSheet"      # title, footer
+      feedback:
+        - "Spinner"          # size: number
+        - "LoadingAnimation" # size: number
+        - "Badge"            # size: s|m, type: new|digit
+        - "Tag"              # color: gray|blue|orange|red|yellow|green, style: filled|tonal
+      layout:
+        - "BottomFixedArea"  # position: sticky|fixed
+        - "Divider"          # 구분선
+      utilities:
+        - "Icon"             # size, color
+        - "Typography"       # typography() 함수
+        - "Shadow"           # shadow(1|2) 함수
+        - "StateLayer"       # stateLayer() 함수
+        - "DesignSystemProvider"  # 앱 루트 필수
+
+  # ----------------------------------------------------------
+  # 화면 목록 (Screens)
+  # ----------------------------------------------------------
+  screens:
+    - id: "SCR-001"
+      name: "{{screen_name}}"
+      route: "{{route_path}}"  # 예: "/upload"
+      description: "{{screen_description}}"
+      
+      # 이 화면이 구현하는 기능
+      implements_features: ["F-001"]
+      
+      # 화면 구성 컴포넌트
+      # 반드시 design_system.allowed_components에 정의된 컴포넌트만 사용
+      components:
+        - id: "{{component_id}}"
+          # type은 qds4-web 컴포넌트명 사용
+          # 예: Button, TopAppBar, BottomSheet, AlertDialog 등
+          type: "{{qds4_component_name}}"
+          description: "{{component_description}}"
+          
+          # 컴포넌트 속성
+          props:
+            "{{prop_name}}": "{{prop_type}}"
+          
+          # 상태별 모습
+          states:
+            - name: "default"
+              appearance: "{{how_it_looks}}"
+              behavior: "{{how_it_behaves}}"
+            - name: "{{state_name}}"
+              appearance: "{{how_it_looks}}"
+              behavior: "{{how_it_behaves}}"
+      
+      # 사용자 인터랙션
+      interactions:
+        - trigger: "{{user_action}}"  # 예: "click submit button"
+          action: "{{system_action}}"  # 예: "validate form and submit"
+          feedback: "{{user_feedback}}"  # 예: "show loading spinner"
+      
+      # 반응형 규칙
+      responsive:
+        mobile: "{{mobile_layout_description}}"
+        tablet: "{{tablet_layout_description}}"
+        desktop: "{{desktop_layout_description}}"
+      
+      # 접근성
+      accessibility:
+        focus_order:
+          - "{{component_id_1}}"
+          - "{{component_id_2}}"
+        aria_labels:
+          "{{component_id}}": "{{aria_label}}"
+        keyboard_shortcuts:
+          "{{key_combination}}": "{{action}}"
+
+# ============================================================
+# 메타데이터
+# ============================================================
+metadata:
+  created_at: "{{created_at}}"
+  author: "{{author}}"
+  status: "draft"
+  depends_on:
+    - "functional-spec.yaml"

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import "@qanda/qds4-web/base.css";
 import "./globals.css";
+import { DesignSystemWrapper } from "@/components/providers";
 
 export const metadata: Metadata = {
   title: "Moonlight - AI 논문 읽기 도우미",
@@ -13,7 +15,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <DesignSystemWrapper>{children}</DesignSystemWrapper>
+      </body>
     </html>
   );
 }

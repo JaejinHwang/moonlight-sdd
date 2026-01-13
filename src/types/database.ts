@@ -28,6 +28,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       papers: {
         Row: {
@@ -69,6 +70,15 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: "papers_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       sections: {
         Row: {
@@ -104,6 +114,15 @@ export interface Database {
           page_end?: number;
           created_at?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: "sections_paper_id_fkey";
+            columns: ["paper_id"];
+            isOneToOne: false;
+            referencedRelation: "papers";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       translations: {
         Row: {
@@ -136,6 +155,22 @@ export interface Database {
           target_lang?: string;
           created_at?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: "translations_paper_id_fkey";
+            columns: ["paper_id"];
+            isOneToOne: false;
+            referencedRelation: "papers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "translations_section_id_fkey";
+            columns: ["section_id"];
+            isOneToOne: false;
+            referencedRelation: "sections";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       analysis: {
         Row: {
@@ -171,6 +206,15 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: "analysis_paper_id_fkey";
+            columns: ["paper_id"];
+            isOneToOne: true;
+            referencedRelation: "papers";
+            referencedColumns: ["id"];
+          }
+        ];
       };
     };
     Views: Record<string, never>;

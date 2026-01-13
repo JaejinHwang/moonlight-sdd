@@ -59,7 +59,8 @@ task_queue:
     description: "Supabase Auth를 이용한 이메일/소셜 로그인"
     feature: null
     type: "fullstack"
-    status: "pending"
+    status: "completed"
+    completed_at: "2025-01-13T15:30:00+09:00"
     priority: "critical"
     dependencies: ["TASK-001"]
 
@@ -85,7 +86,8 @@ task_queue:
     description: "드래그앤드롭 PDF 업로드 컴포넌트"
     feature: "F-001"
     type: "frontend"
-    status: "pending"
+    status: "completed"
+    completed_at: "2025-01-13T16:00:00+09:00"
     priority: "high"
     dependencies: ["TASK-002"]
 
@@ -110,7 +112,8 @@ task_queue:
     description: "PDF 파일을 Supabase Storage에 업로드하는 API"
     feature: "F-001"
     type: "backend"
-    status: "pending"
+    status: "completed"
+    completed_at: "2026-01-13T12:00:00+09:00"
     priority: "high"
     dependencies: ["TASK-001"]
 

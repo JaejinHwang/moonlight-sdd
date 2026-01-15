@@ -235,18 +235,23 @@ ui_spec:
       implements_features: ["F-003", "F-004", "F-005", "F-006", "F-007", "F-008"]
 
       layout: |
-        +------------------------------------------+
-        |  TopAppBar (Logo, Paper Title, Actions)  |
-        +------------------------------------------+
-        |  Toolbar (SegmentedControl + Switch)     |
-        +------+---------------------------+-------+
-        |      |                           |       |
-        | TOC  |      PDF Viewer           | Side  |
-        | 목차  |      (본문 영역)           | Panel |
-        |      |                           | 요약   |
-        |      |                           | 키워드 |
-        |      |                           |       |
-        +------+---------------------------+-------+
+        +--------------------------------------------------+
+        |  TopAppBar (Logo, Paper Title, Actions)          |
+        +--------------------------------------------------+
+        |  Toolbar (SegmentedControl + Switch)             |
+        +------------------------+-------------------------+
+        |                        |                         |
+        |    PDF Original View   |    Parsed Text View     |
+        |    (PDF.js 렌더링)      |    (파싱된 텍스트/번역)   |
+        |                        |                         |
+        |    - 원본 PDF 페이지    |    - 섹션별 텍스트       |
+        |    - 줌 인/아웃        |    - 수식 렌더링         |
+        |    - 페이지 네비게이션  |    - 하이라이트          |
+        |                        |    - 번역 토글           |
+        |                        |                         |
+        +------------------------+-------------------------+
+        |  (드래그로 분할 비율 조정 가능)                     |
+        +--------------------------------------------------+
 
       components:
         # QDS: TopAppBar 사용
@@ -277,63 +282,139 @@ ui_spec:
               appearance: "처리 중인 Switch 옆에 Spinner(size=16) 표시"
               behavior: "해당 Switch disabled 상태"
 
-        # 커스텀 컴포넌트 (QDS 기반 조합)
-        - id: "toc_sidebar"
+        # 좌우 분할 뷰 컨테이너
+        - id: "split_view_container"
           type: "CustomComponent"
-          qds_components_used: ["Typography", "IconButton", "Divider", "StateLayer"]
-          description: "논문 목차 사이드바"
+          qds_components_used: []
+          description: "PDF 원본과 파싱된 텍스트를 좌우로 분할하여 표시하는 컨테이너"
           props:
-            sections: "Section[]"
-            activeSection: "string"
+            leftPanel: "ReactNode"    # PDF 원본 뷰어
+            rightPanel: "ReactNode"   # 파싱된 텍스트 뷰어
+            initialRatio: "number"    # 초기 분할 비율 (0.5 = 50:50)
+            minWidth: "number"        # 각 패널 최소 너비 (px)
           states:
-            - name: "expanded"
-              appearance: "Typography(body_2)로 목차 항목, 현재 섹션에 StateLayer(blue_50) 하이라이트"
-              behavior: "섹션 클릭 시 스크롤"
-            - name: "collapsed"
-              appearance: "IconButton(menu)만 표시"
-              behavior: "클릭 시 펼침"
+            - name: "default"
+              appearance: "좌우 균등 분할, 중앙에 드래그 핸들"
+              behavior: "드래그로 분할 비율 조정 가능"
+            - name: "left_focused"
+              appearance: "왼쪽 패널 70%, 오른쪽 패널 30%"
+              behavior: "PDF 원본 집중 보기"
+            - name: "right_focused"
+              appearance: "왼쪽 패널 30%, 오른쪽 패널 70%"
+              behavior: "텍스트/번역 집중 보기"
+          interactions:
+            - trigger: "분할선 드래그"
+              action: "분할 비율 실시간 조정"
+              feedback: "패널 너비 즉시 반영"
+            - trigger: "분할선 더블클릭"
+              action: "50:50 비율로 리셋"
+              feedback: "애니메이션과 함께 리셋"
 
-        # 커스텀 컴포넌트 (QDS 기반 조합)
-        - id: "pdf_viewer"
+        # PDF 원본 렌더러 (PDF.js 기반) - 연속 스크롤 방식
+        - id: "pdf_original_viewer"
           type: "CustomComponent"
-          qds_components_used: ["Typography", "LoadingAnimation", "Tag"]
-          description: "논문 본문 뷰어"
+          qds_components_used: ["LoadingAnimation", "IconButton", "Typography"]
+          external_dependencies: ["react-pdf", "pdfjs-dist"]
+          description: "PDF.js를 사용한 원본 PDF 연속 스크롤 뷰어"
           props:
-            paper: "Paper"
-            highlights: "Highlight[]"
-            translation: "Translation | null"
+            fileUrl: "string"           # PDF 파일 signed URL (Supabase Storage)
+            currentPage: "number"       # 현재 페이지 번호 (외부 제어용)
+            onPageChange: "function"    # 페이지 변경 콜백
+            onTotalPagesChange: "function"  # 총 페이지 수 콜백
+          internal_state:
+            scale: "number"             # 줌 레벨 (0.5 ~ 3.0, 기본 1.0)
+            numPages: "number"          # 총 페이지 수
+            isLoading: "boolean"        # 로딩 상태
+            error: "string | null"      # 에러 메시지
+          render_mode: "continuous_scroll"  # 연속 스크롤 방식
           states:
             - name: "loading"
-              appearance: "LoadingAnimation(size=48) 중앙 표시, 스켈레톤 UI"
-              behavior: "로딩 중"
+              appearance: "LoadingAnimation(size=48) 중앙 표시, 'PDF 로딩 중...' 텍스트"
+              behavior: "PDF 문서 로딩 중"
             - name: "ready"
-              appearance: "Typography 기반 텍스트 렌더링, 이미지, 수식"
-              behavior: "스크롤, 선택 가능"
+              appearance: |
+                - 상단 컨트롤 바: 페이지 네비게이션 버튼, 현재 페이지/총 페이지 표시, 줌 컨트롤
+                - 본문: 모든 페이지가 세로로 연속 배치, 각 페이지에 그림자 효과
+                - 스크롤 시 화면 중앙에 가장 가까운 페이지가 현재 페이지로 표시
+              behavior: |
+                - 마우스/터치 스크롤로 전체 PDF 탐색
+                - 이전/다음 버튼 클릭 시 해당 페이지 중앙으로 부드럽게 스크롤
+                - 줌 인/아웃 시 모든 페이지 스케일 동시 변경
+            - name: "error"
+              appearance: "Typography(title_2, red_50)로 에러 메시지, Typography(body_1, gray_50)로 안내"
+              behavior: "PDF 로드 실패 시 표시"
+          sub_components:
+            - id: "pdf_control_bar"
+              description: "상단 페이지 네비게이션 및 줌 컨트롤 바"
+              appearance: |
+                - 페이지 네비게이션: IconButton(chevron_left), 페이지 번호 표시, IconButton(chevron_right)
+                - 구분선
+                - 줌 컨트롤: IconButton(zoom_out), 줌 퍼센트 표시, IconButton(zoom_in)
+              styling:
+                background: "gray_95"
+                border_bottom: "1px solid gray_80"
+                padding: "8px 16px"
+            - id: "pdf_scroll_container"
+              description: "모든 페이지를 담는 스크롤 컨테이너"
+              appearance: "세로 스크롤, 페이지 중앙 정렬, 16px 간격"
+              behavior: |
+                - 스크롤 이벤트 감지하여 현재 페이지 업데이트
+                - 프로그래매틱 스크롤과 사용자 스크롤 구분
+            - id: "pdf_page_wrapper"
+              description: "개별 PDF 페이지 래퍼"
+              appearance: "boxShadow: '0 2px 8px rgba(0,0,0,0.3)', backgroundColor: white"
+              behavior: "각 페이지에 ref 연결하여 스크롤 타겟으로 사용"
+          interactions:
+            - trigger: "이전/다음 버튼 클릭"
+              action: "해당 페이지 요소로 scrollIntoView({ behavior: 'smooth', block: 'center' })"
+              feedback: "부드러운 스크롤 애니메이션, 현재 페이지 번호 업데이트"
+            - trigger: "스크롤"
+              action: "화면 중앙에 가장 가까운 페이지를 현재 페이지로 설정"
+              feedback: "컨트롤 바의 페이지 번호 실시간 업데이트"
+            - trigger: "줌 인/아웃 버튼 클릭"
+              action: "scale 값 0.25씩 증감 (범위: 0.5 ~ 3.0)"
+              feedback: "모든 페이지 즉시 리렌더링"
+          keyboard_shortcuts:
+            "ArrowLeft": "이전 페이지로 스크롤"
+            "ArrowRight": "다음 페이지로 스크롤"
+            "+/=": "줌 인"
+            "-": "줌 아웃"
+          performance_notes:
+            - "모든 페이지를 한 번에 렌더링하므로 페이지 수가 많은 PDF는 초기 로딩 시간 증가"
+            - "각 Page 컴포넌트에 loading prop으로 개별 로딩 상태 표시"
+            - "필요 시 가상화(virtualization) 적용 고려"
+
+        # 파싱된 텍스트 뷰어 (기존 PdfViewer 개선)
+        - id: "parsed_text_viewer"
+          type: "CustomComponent"
+          qds_components_used: ["Typography", "LoadingAnimation", "Tag"]
+          description: "파싱된 논문 텍스트, 번역, 하이라이트 표시"
+          props:
+            paper: "Paper"
+            sections: "Section[]"
+            highlights: "Highlight[]"
+            translation: "Translation | null"
+            currentPdfPage: "number"  # PDF 뷰어와 동기화
+          states:
+            - name: "loading"
+              appearance: "LoadingAnimation(size=48) 중앙 표시"
+              behavior: "섹션 데이터 로딩 중"
+            - name: "ready"
+              appearance: "Typography 기반 섹션별 텍스트, KaTeX 수식 렌더링"
+              behavior: "스크롤, 텍스트 선택 가능"
             - name: "translated"
-              appearance: "번역문 Typography(body_1), 원문은 Typography(body_2, gray_50)"
-              behavior: "원문/번역 전환"
+              appearance: "번역문 Typography(body_1), 원문은 Typography(body_2, gray_50) 병기"
+              behavior: "원문/번역 토글 가능"
             - name: "highlighted"
               appearance: "핵심 문장에 yellow_20 배경색 적용"
-              behavior: "하이라이트 hover 시 BottomSheet로 이유 표시"
-
-        # 커스텀 컴포넌트 (QDS 기반 조합)
-        - id: "side_panel"
-          type: "CustomComponent"
-          qds_components_used: ["Tabs", "Typography", "Tag", "TextButton", "Divider"]
-          description: "요약/키워드 사이드 패널"
-          props:
-            summary: "Summary | null"
-            keywords: "Keyword[]"
-          states:
-            - name: "summary_view"
-              appearance: "Tabs(size=s)로 전환, Typography(body_1)로 요약 내용, 아코디언 형태"
-              behavior: "섹션 TextButton 클릭 시 해당 위치로 스크롤"
-            - name: "keywords_view"
-              appearance: "Tag(style=tonal) 리스트로 키워드 표시"
-              behavior: "Tag 클릭 시 BottomSheet로 설명 표시"
-            - name: "collapsed"
-              appearance: "IconButton(panel)만 표시"
-              behavior: "클릭 시 펼침"
+              behavior: "하이라이트 hover 시 이유 툴팁 표시"
+          interactions:
+            - trigger: "PDF 페이지 변경"
+              action: "해당 페이지의 섹션으로 자동 스크롤"
+              feedback: "부드러운 스크롤 애니메이션"
+            - trigger: "섹션 클릭"
+              action: "PDF 뷰어를 해당 페이지로 이동"
+              feedback: "양쪽 뷰어 동기화"
 
         # QDS: BottomSheet 사용
         - id: "keyword_bottomsheet"
@@ -367,41 +448,49 @@ ui_spec:
               behavior: "번역 처리 중"
 
       interactions:
-        - trigger: "목차 섹션 클릭"
-          action: "해당 섹션으로 스크롤"
-          feedback: "부드러운 스크롤 애니메이션, StateLayer로 현재 섹션 하이라이트"
+        - trigger: "PDF 뷰어 스크롤"
+          action: "현재 보이는 페이지 감지, 오른쪽 텍스트 뷰어를 해당 섹션으로 동기화"
+          feedback: "부드러운 스크롤 애니메이션"
+        - trigger: "PDF 이전/다음 버튼 클릭"
+          action: "해당 페이지 중앙으로 스크롤, 텍스트 뷰어 동기화"
+          feedback: "부드러운 스크롤 애니메이션"
+        - trigger: "텍스트 뷰어 섹션 클릭"
+          action: "왼쪽 PDF 뷰어를 해당 페이지로 스크롤"
+          feedback: "PDF 페이지로 부드러운 스크롤"
+        - trigger: "분할선 드래그"
+          action: "좌우 패널 비율 조정"
+          feedback: "실시간 너비 변경"
         - trigger: "번역 Switch on"
-          action: "번역 요청 및 표시"
+          action: "번역 요청 및 오른쪽 패널에 표시"
           feedback: "Spinner 표시 후 번역문 페이드인"
         - trigger: "하이라이트 문장 탭/클릭"
           action: "하이라이트 이유 표시"
-          feedback: "BottomSheet로 이유 표시"
-        - trigger: "키워드 Tag 클릭"
-          action: "키워드 설명 로드"
-          feedback: "BottomSheet로 설명 표시"
-        - trigger: "스크롤"
-          action: "현재 섹션 추적"
-          feedback: "목차에서 StateLayer로 현재 위치 하이라이트"
+          feedback: "툴팁 또는 BottomSheet로 이유 표시"
+        - trigger: "줌 인/아웃"
+          action: "PDF 뷰어 스케일 조정 (모든 페이지에 적용)"
+          feedback: "모든 PDF 페이지 즉시 리렌더링"
 
       responsive:
-        mobile: "SMALL 브레이크포인트, 사이드바 숨김, BottomSheet로 대체, 툴바 IconButton만"
-        tablet: "MEDIUM 브레이크포인트, 목차 접힘 기본, 사이드 패널 BottomSheet 오버레이"
-        desktop: "LARGE 브레이크포인트, 3컬럼 레이아웃 (목차 | 뷰어 | 사이드 패널)"
+        mobile: "SMALL 브레이크포인트, 탭으로 PDF/텍스트 전환 (분할 뷰 대신)"
+        tablet: "MEDIUM 브레이크포인트, 좌우 분할 뷰 (드래그 조정 가능)"
+        desktop: "LARGE 브레이크포인트, 좌우 분할 뷰 (넓은 화면 활용)"
 
       accessibility:
-        focus_order: ["viewer_header", "toolbar", "toc_sidebar", "pdf_viewer", "side_panel"]
+        focus_order: ["viewer_header", "toolbar", "pdf_original_viewer", "parsed_text_viewer"]
         aria_labels:
-          toc_sidebar: "논문 목차"
-          pdf_viewer: "논문 본문"
-          side_panel: "분석 결과 패널"
+          pdf_original_viewer: "PDF 원본 뷰어"
+          parsed_text_viewer: "파싱된 텍스트 뷰어"
+          split_divider: "패널 분할선 - 드래그하여 크기 조정"
           translation_toggle: "번역 켜기/끄기"
         keyboard_shortcuts:
-          "j": "다음 섹션으로 이동"
-          "k": "이전 섹션으로 이동"
+          "ArrowLeft": "PDF 이전 페이지"
+          "ArrowRight": "PDF 다음 페이지"
+          "+": "줌 인"
+          "-": "줌 아웃"
           "t": "번역 토글"
           "h": "하이라이트 토글"
-          "s": "요약 패널 토글"
-          "Escape": "패널 닫기"
+          "1": "PDF 뷰어에 포커스"
+          "2": "텍스트 뷰어에 포커스"
 
     # ========================================
     # SCR-003: 내 논문 목록 페이지
@@ -606,7 +695,7 @@ ui_spec:
 # ============================================================
 metadata:
   created_at: "2025-01-13T11:30:00+09:00"
-  updated_at: "2025-01-13T14:00:00+09:00"
+  updated_at: "2025-01-13T18:00:00+09:00"
   author: "assistant"
   status: "draft"
   depends_on:
@@ -621,3 +710,10 @@ metadata:
     total_shared_components: 5
     qds_direct_components: 8
     custom_components_using_qds: 13
+  changelog:
+    - date: "2025-01-13"
+      changes:
+        - "pdf_original_viewer: 단일 페이지 방식에서 연속 스크롤 방식으로 변경"
+        - "pdf_original_viewer: 페이지 버튼 클릭 시 해당 페이지 중앙으로 스크롤"
+        - "pdf_original_viewer: 스크롤 시 현재 페이지 자동 감지 기능 추가"
+        - "fileUrl prop이 signed URL을 받도록 명세 변경 (private bucket 지원)"

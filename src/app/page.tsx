@@ -56,24 +56,15 @@ export default function Home() {
   );
 
   return (
-    <div
+    <main
+      id="main-content"
+      className="landing-container"
       style={{
-        minHeight: "calc(100vh - 56px)",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        padding: "48px 24px",
         backgroundColor: COLOR.gray_100,
       }}
     >
       {/* Hero Section - ui-spec.yaml#SCR-001.components.hero_section */}
-      <section
-        style={{
-          textAlign: "center",
-          marginBottom: "48px",
-          maxWidth: "600px",
-        }}
-      >
+      <section className="landing-hero">
         <h1
           className={typography("large_title")}
           style={{ color: COLOR.gray_10, marginBottom: "16px" }}
@@ -91,17 +82,16 @@ export default function Home() {
       </section>
 
       {/* Upload DropZone - ui-spec.yaml#SCR-001.components.upload_dropzone */}
-      <section style={{ width: "100%", maxWidth: "500px" }}>
+      <section className="landing-upload-section">
         <DropZone onFileSelect={handleFileSelect} />
       </section>
 
       {/* Divider with "or" text */}
       <div
+        className="landing-upload-section"
         style={{
           display: "flex",
           alignItems: "center",
-          width: "100%",
-          maxWidth: "500px",
           margin: "24px 0",
         }}
       >
@@ -131,9 +121,9 @@ export default function Home() {
       </div>
 
       {/* URL Input - ui-spec.yaml#SCR-001.components.url_input */}
-      <section style={{ width: "100%", maxWidth: "500px" }}>
+      <section className="landing-upload-section">
         <UrlInput onSubmit={handleUrlSubmit} />
       </section>
-    </div>
+    </main>
   );
 }

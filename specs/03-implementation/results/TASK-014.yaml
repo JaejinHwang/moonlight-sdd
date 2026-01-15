@@ -1,0 +1,103 @@
+implementation_result:
+  task_id: "TASK-014"
+  feature_id: null
+  completed_at: "2026-01-14T20:30:00+09:00"
+  implemented_by: "claude-code"
+
+  files_created:
+    - path: "src/app/papers/page.tsx"
+      lines: 475
+      purpose: "/papers 페이지 - 내 논문 목록 관리 UI"
+    - path: "src/components/papers/PaperCard.tsx"
+      lines: 225
+      purpose: "개별 논문 카드 컴포넌트"
+    - path: "src/components/papers/index.ts"
+      lines: 1
+      purpose: "papers 컴포넌트 배럴 파일"
+
+  files_modified:
+    - path: "src/app/api/papers/route.ts"
+      changes: "GET 엔드포인트 추가 (논문 목록 조회, 검색/필터/정렬 지원)"
+    - path: "src/app/api/papers/[id]/route.ts"
+      changes: "DELETE 엔드포인트 추가 (논문 삭제 - 파일 + DB 레코드)"
+    - path: "src/components/layout/Header.tsx"
+      changes: "사용자 메뉴에 '내 논문 목록' 링크 추가"
+    - path: "src/components/viewer/KeywordExplanationModal.tsx"
+      changes: "Tag 컴포넌트 size prop 제거 (QDS API 호환성)"
+    - path: "src/components/viewer/KeywordPanel.tsx"
+      changes: "Tag 컴포넌트 size prop 제거 및 children 타입 수정"
+
+  api_endpoints:
+    - method: "GET"
+      path: "/api/papers"
+      description: "사용자 논문 목록 조회"
+      query_params:
+        - "search: 제목 검색"
+        - "status: 상태 필터 (processing|ready|error)"
+        - "sort: 정렬 기준 (created_at|updated_at|title)"
+        - "order: 정렬 순서 (asc|desc)"
+      response: "{ papers: Paper[], total: number }"
+    - method: "DELETE"
+      path: "/api/papers/{id}"
+      description: "논문 삭제 (파일 + DB)"
+      response: "204 No Content"
+
+  test_results:
+    note: "빌드 성공 확인 (npm run build)"
+    build_status: "passed"
+
+  spec_compliance:
+    ui_components:
+      - name: "PaperCard"
+        spec_ref: "ui-spec.yaml#SCR-003.components.paper_card"
+        implemented: true
+        states:
+          - default: true
+          - processing: true
+          - hover: true
+      - name: "PaperGrid"
+        spec_ref: "ui-spec.yaml#SCR-003.components.paper_grid"
+        implemented: true
+        states:
+          - loading: true
+          - empty: true
+          - populated: true
+      - name: "SearchBar"
+        spec_ref: "ui-spec.yaml#SCR-003.components.search_bar"
+        implemented: true
+      - name: "TopAppBar"
+        spec_ref: "ui-spec.yaml#SCR-003.components.papers_header"
+        implemented: true
+
+    acceptance_criteria:
+      - criteria: "로그인한 사용자가 /papers에 접근하면 업로드한 논문 목록이 표시된다"
+        implemented: true
+        notes: "GET /api/papers 호출하여 목록 표시, 로딩/빈 상태 처리"
+      - criteria: "논문 카드를 클릭하면 해당 논문 뷰어로 이동한다"
+        implemented: true
+        notes: "ready 상태인 논문만 클릭 가능, /paper/[id]로 라우팅"
+
+    features:
+      - name: "논문 목록 조회"
+        implemented: true
+      - name: "논문 검색"
+        implemented: true
+        notes: "실시간 필터링 (debounced 300ms)"
+      - name: "논문 삭제"
+        implemented: true
+        notes: "삭제 확인 모달 + API 호출"
+      - name: "반응형 레이아웃"
+        implemented: true
+        notes: "모바일 FAB, 데스크톱 버튼"
+
+  deviations:
+    - type: "QDS API 차이"
+      description: "AlertDialog, FloatingActionButton 등 일부 QDS 컴포넌트 API가 스펙과 다름"
+      resolution: "직접 구현한 모달 및 버튼으로 대체"
+    - type: "shadow 함수 미존재"
+      description: "QDS에 shadow() 함수가 없음"
+      resolution: "직접 boxShadow CSS 적용"
+
+  next_tasks:
+    unblocked: ["TASK-015"]
+    notes: "TASK-015 (반응형 디자인 및 최종 마무리) 진행 가능"

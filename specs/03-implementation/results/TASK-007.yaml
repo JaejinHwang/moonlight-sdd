@@ -1,0 +1,138 @@
+implementation_result:
+  task_id: "TASK-007"
+  feature_id: "F-003"
+  completed_at: "2026-01-13T20:30:00+09:00"
+  updated_at: "2026-01-14T10:00:00+09:00"
+  implemented_by: "claude-code"
+
+  # ===== 수정 이력 =====
+  # 2026-01-14: 좌우 분할 뷰 추가 (PDF 원본 + 파싱된 텍스트)
+  # - 스펙 불일치로 인해 PDF 원본 렌더링 누락 수정
+  # - ui-spec.yaml, technical-spec.yaml 업데이트
+  # - react-pdf 패키지 추가
+  # - PdfOriginalViewer, SplitViewLayout 컴포넌트 추가
+
+  files_created:
+    - path: "src/app/paper/[id]/page.tsx"
+      lines: 307
+      purpose: "논문 뷰어 페이지 라우트 - 좌우 분할 뷰 (PDF 원본 + 파싱된 텍스트)"
+    - path: "src/app/api/papers/[id]/route.ts"
+      lines: 55
+      purpose: "논문 데이터 로딩 API - paper와 sections 조회"
+    - path: "src/components/viewer/PdfViewer.tsx"
+      lines: 175
+      purpose: "파싱된 텍스트 뷰어 - 가상 스크롤, 섹션 렌더링"
+    - path: "src/components/viewer/PdfOriginalViewer.tsx"
+      lines: 280
+      purpose: "PDF 원본 뷰어 - PDF.js 기반 페이지 렌더링, 줌, 페이지 네비게이션"
+    - path: "src/components/viewer/SplitViewLayout.tsx"
+      lines: 180
+      purpose: "좌우 분할 뷰 레이아웃 - 드래그로 비율 조정 가능"
+    - path: "src/components/viewer/SectionRenderer.tsx"
+      lines: 200
+      purpose: "섹션 렌더링 컴포넌트 - 텍스트, 수식, 하이라이트 처리"
+    - path: "src/components/viewer/MathRenderer.tsx"
+      lines: 85
+      purpose: "KaTeX 기반 수식 렌더링 컴포넌트"
+    - path: "src/components/viewer/index.ts"
+      lines: 5
+      purpose: "viewer 컴포넌트 exports"
+    - path: "src/hooks/useVirtualScroll.ts"
+      lines: 130
+      purpose: "가상 스크롤 훅 - 60fps 성능 최적화"
+    - path: "src/hooks/index.ts"
+      lines: 1
+      purpose: "hooks exports"
+
+  files_modified:
+    - path: "src/types/index.ts"
+      changes: "ViewerState 타입 및 RenderedSection 인터페이스 추가"
+    - path: "specs/02-specification/ui-spec.yaml"
+      changes: "SCR-002 좌우 분할 뷰 레이아웃으로 업데이트"
+    - path: "specs/02-specification/technical-spec.yaml"
+      changes: "react-pdf, pdfjs-dist 의존성 명시 추가"
+
+  packages_added:
+    - name: "katex"
+      version: "^0.16.x"
+      purpose: "LaTeX 수식 렌더링"
+    - name: "@types/katex"
+      version: "^0.16.x"
+      purpose: "KaTeX 타입 정의"
+    - name: "react-pdf"
+      version: "^9.x"
+      purpose: "PDF 원본 파일 렌더링 (PDF.js wrapper)"
+    - name: "pdfjs-dist"
+      version: "^5.x"
+      purpose: "PDF.js 코어 라이브러리"
+
+  test_results:
+    build: "passed"
+    typescript: "passed"
+    note: "npm run build 성공"
+
+  spec_compliance:
+    layout:
+      - name: "split_view_container"
+        implemented: true
+        location: "src/components/viewer/SplitViewLayout.tsx"
+        description: "좌우 분할 뷰 - 드래그로 비율 조정, 더블클릭으로 50:50 리셋"
+      - name: "pdf_original_viewer"
+        implemented: true
+        location: "src/components/viewer/PdfOriginalViewer.tsx"
+        description: "PDF 원본 렌더링 - 페이지 네비게이션, 줌 인/아웃"
+      - name: "parsed_text_viewer"
+        implemented: true
+        location: "src/components/viewer/PdfViewer.tsx"
+        description: "파싱된 텍스트 - 섹션별 표시, 수식 렌더링"
+
+    states:
+      - name: "idle"
+        implemented: true
+        location: "src/app/paper/[id]/page.tsx:99"
+      - name: "rendering"
+        implemented: true
+        location: "src/app/paper/[id]/page.tsx:112"
+      - name: "ready"
+        implemented: true
+        location: "src/app/paper/[id]/page.tsx:124"
+      - name: "error"
+        implemented: true
+        location: "src/app/paper/[id]/page.tsx:129"
+
+    error_cases:
+      - code: "RENDER_MEMORY_ERROR"
+        implemented: true
+        location: "src/app/paper/[id]/page.tsx:70-74"
+      - code: "FONT_LOAD_ERROR"
+        implemented: true
+        location: "src/app/paper/[id]/page.tsx:75-79"
+      - code: "IMAGE_LOAD_ERROR"
+        implemented: true
+        location: "src/app/paper/[id]/page.tsx:80-84"
+      - code: "PAPER_NOT_FOUND"
+        implemented: true
+        location: "src/app/paper/[id]/page.tsx:85-89"
+
+    edge_cases:
+      - scenario: "100페이지 이상의 긴 논문"
+        implemented: true
+        implementation: "useVirtualScroll 훅으로 가상 스크롤 구현"
+      - scenario: "수식이 많은 논문"
+        implemented: true
+        implementation: "KaTeX로 $...$ 및 $$...$$ 수식 렌더링"
+
+    performance:
+      - metric: "스크롤 프레임레이트"
+        target: "60fps"
+        implementation: "requestAnimationFrame 기반 가상 스크롤, will-change CSS"
+
+  deviations: []
+
+  next_tasks:
+    unblocked:
+      - "TASK-008 (목차 네비게이션)"
+      - "TASK-010 (자동 번역 기능)"
+      - "TASK-011 (핵심 하이라이트 기능)"
+      - "TASK-012 (논문 요약 기능)"
+      - "TASK-013 (키워드 추출 및 설명)"

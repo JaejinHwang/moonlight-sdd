@@ -1,0 +1,95 @@
+implementation_result:
+  task_id: "TASK-009"
+  feature_id: null
+  completed_at: "2026-01-14T10:00:00+09:00"
+  implemented_by: "claude-code"
+
+  files_created:
+    - path: "src/lib/gemini/client.ts"
+      lines: 295
+      purpose: "Gemini API 클라이언트 - 재시도 로직, 토큰 사용량 로깅 포함"
+    - path: "src/lib/gemini/types.ts"
+      lines: 117
+      purpose: "Gemini API 타입 정의"
+    - path: "src/lib/gemini/prompts.ts"
+      lines: 147
+      purpose: "프롬프트 템플릿 관리 (번역, 요약, 하이라이트, 키워드)"
+    - path: "src/lib/gemini/index.ts"
+      lines: 33
+      purpose: "모듈 re-export"
+
+  files_modified: []
+
+  test_results:
+    total: 0
+    passed: 0
+    failed: 0
+    notes: "유닛 테스트 미작성 - API 통합 테스트는 실제 API 키 필요"
+
+  spec_compliance:
+    acceptance_criteria:
+      - criteria: "Given API 키가 설정되었을 때, When Gemini API를 호출하면, Then 응답이 반환된다"
+        implemented: true
+        implementation_details: "healthCheck() 메서드 및 모든 public API 메서드에서 구현"
+      - criteria: "Given API 호출 실패 시, When 재시도하면, Then 최대 3회까지 재시도한다"
+        implemented: true
+        implementation_details: "generateWithRetry() 메서드에서 exponential backoff와 함께 구현"
+
+    subtasks:
+      - name: "Gemini API 클라이언트 설정"
+        implemented: true
+        details: "GoogleGenerativeAI 클라이언트 초기화, 설정 가능한 model/maxRetries/retryDelayMs"
+      - name: "프롬프트 템플릿 관리"
+        implemented: true
+        details: "5가지 프롬프트 빌더 함수 (translate, summarize, highlight, keyword, keywordExplain)"
+      - name: "에러 핸들링 및 재시도 로직"
+        implemented: true
+        details: "parseError() 메서드로 에러 분류, RETRYABLE_ERRORS 기반 재시도 결정"
+      - name: "토큰 사용량 로깅"
+        implemented: true
+        details: "logTokenUsage() 메서드로 모든 API 호출 시 토큰 사용량 기록"
+
+  features:
+    - name: "translate"
+      method: "GeminiClient.translate()"
+      description: "텍스트 번역 (F-005)"
+    - name: "summarize"
+      method: "GeminiClient.summarize()"
+      description: "텍스트 요약 - 전체/섹션별 (F-007)"
+    - name: "extractHighlights"
+      method: "GeminiClient.extractHighlights()"
+      description: "핵심 문장 추출 (F-006)"
+    - name: "extractKeywords"
+      method: "GeminiClient.extractKeywords()"
+      description: "키워드 추출 (F-008)"
+    - name: "explainKeyword"
+      method: "GeminiClient.explainKeyword()"
+      description: "키워드 상세 설명 (F-008)"
+    - name: "healthCheck"
+      method: "GeminiClient.healthCheck()"
+      description: "API 연결 상태 확인"
+
+  configuration:
+    environment_variables:
+      - name: "GEMINI_API_KEY"
+        required: true
+        description: "Google AI Studio에서 발급받은 Gemini API 키"
+    defaults:
+      model: "gemini-1.5-flash"
+      maxRetries: 3
+      retryDelayMs: 1000
+      maxTokens: 8192
+
+  deviations: []
+
+  next_tasks:
+    unblocked:
+      - "TASK-010"  # 자동 번역 기능 (F-005)
+      - "TASK-011"  # 핵심 하이라이트 기능 (F-006)
+      - "TASK-012"  # 논문 요약 기능 (F-007)
+      - "TASK-013"  # 키워드 추출 및 설명 (F-008)
+
+  notes:
+    - "Gemini 1.5 Flash 모델 사용 (비용 효율적, 빠른 응답)"
+    - "모든 JSON 응답은 마크다운 코드 블록 제거 후 파싱"
+    - "싱글톤 패턴으로 getGeminiClient() 제공 (재사용 용이)"

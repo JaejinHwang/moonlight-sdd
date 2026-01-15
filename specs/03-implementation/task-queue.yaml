@@ -188,7 +188,8 @@ task_queue:
     description: "논문 텍스트 렌더링 뷰어"
     feature: "F-003"
     type: "frontend"
-    status: "pending"
+    status: "completed"
+    completed_at: "2026-01-13T20:30:00+09:00"
     priority: "high"
     dependencies: ["TASK-005"]
 
@@ -213,7 +214,8 @@ task_queue:
     description: "사이드바 목차 및 섹션 이동"
     feature: "F-004"
     type: "frontend"
-    status: "pending"
+    status: "completed"
+    completed_at: "2026-01-14T09:30:00+09:00"
     priority: "medium"
     dependencies: ["TASK-007"]
 
@@ -240,7 +242,8 @@ task_queue:
     description: "Gemini API 클라이언트 및 공통 유틸리티"
     feature: null
     type: "backend"
-    status: "pending"
+    status: "completed"
+    completed_at: "2026-01-14T10:00:00+09:00"
     priority: "high"
     dependencies: ["TASK-000"]
 
@@ -262,7 +265,8 @@ task_queue:
     description: "논문 텍스트 번역 기능"
     feature: "F-005"
     type: "fullstack"
-    status: "pending"
+    status: "completed"
+    completed_at: "2026-01-14T12:00:00+09:00"
     priority: "high"
     dependencies: ["TASK-007", "TASK-009"]
 
@@ -288,7 +292,8 @@ task_queue:
     description: "AI 기반 핵심 문장 하이라이트"
     feature: "F-006"
     type: "fullstack"
-    status: "pending"
+    status: "completed"
+    completed_at: "2026-01-14T14:30:00+09:00"
     priority: "medium"
     dependencies: ["TASK-007", "TASK-009"]
 
@@ -312,7 +317,8 @@ task_queue:
     description: "전체 및 섹션별 요약 생성"
     feature: "F-007"
     type: "fullstack"
-    status: "pending"
+    status: "completed"
+    completed_at: "2026-01-14T16:30:00+09:00"
     priority: "medium"
     dependencies: ["TASK-007", "TASK-009"]
 
@@ -336,7 +342,8 @@ task_queue:
     description: "핵심 키워드 추출 및 맥락 기반 설명"
     feature: "F-008"
     type: "fullstack"
-    status: "pending"
+    status: "completed"
+    completed_at: "2026-01-14T18:30:00+09:00"
     priority: "medium"
     dependencies: ["TASK-007", "TASK-009"]
 
@@ -364,7 +371,8 @@ task_queue:
     description: "업로드한 논문 목록 관리"
     feature: null
     type: "fullstack"
-    status: "pending"
+    status: "completed"
+    completed_at: "2026-01-14T20:30:00+09:00"
     priority: "medium"
     dependencies: ["TASK-005"]
 
@@ -388,7 +396,8 @@ task_queue:
     description: "모바일/태블릿 대응 및 최종 QA"
     feature: null
     type: "frontend"
-    status: "pending"
+    status: "completed"
+    completed_at: "2026-01-14T22:30:00+09:00"
     priority: "low"
     dependencies: ["TASK-014"]
 

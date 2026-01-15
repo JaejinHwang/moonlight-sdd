@@ -26,3 +26,404 @@ body {
     text-wrap: balance;
   }
 }
+
+/* ============================================================
+ * Responsive Design - Breakpoints from ui-spec.yaml
+ * SMALL: 360px (모바일)
+ * MEDIUM: 640px (태블릿)
+ * LARGE: 1200px (데스크톱)
+ * EXTRA_LARGE: 1600px (대형 화면)
+ * ============================================================ */
+
+/* Mobile-first approach: default is mobile */
+
+/* Show only on mobile (< 640px) */
+.mobile-only {
+  display: block;
+}
+
+/* Show only on tablet and up (>= 640px) */
+.tablet-up {
+  display: none;
+}
+
+/* Show only on desktop (>= 1200px) */
+.desktop-only {
+  display: none;
+}
+
+/* Hide on mobile, show on tablet+ */
+@media (min-width: 640px) {
+  .mobile-only {
+    display: none !important;
+  }
+  .tablet-up {
+    display: block;
+  }
+  .tablet-up-flex {
+    display: flex !important;
+  }
+}
+
+/* Desktop only (>= 1200px) */
+@media (min-width: 1200px) {
+  .desktop-only {
+    display: block;
+  }
+  .desktop-only-flex {
+    display: flex !important;
+  }
+}
+
+/* ============================================================
+ * SCR-001: Landing Page Responsive Styles
+ * ============================================================ */
+.landing-container {
+  min-height: calc(100vh - 56px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px;
+}
+
+@media (min-width: 640px) {
+  .landing-container {
+    padding: 48px 24px;
+  }
+}
+
+.landing-hero {
+  text-align: center;
+  margin-bottom: 32px;
+  max-width: 100%;
+  padding: 0 8px;
+}
+
+@media (min-width: 640px) {
+  .landing-hero {
+    margin-bottom: 48px;
+    max-width: 600px;
+  }
+}
+
+.landing-upload-section {
+  width: 100%;
+  max-width: 100%;
+}
+
+@media (min-width: 640px) {
+  .landing-upload-section {
+    max-width: 500px;
+  }
+}
+
+/* ============================================================
+ * SCR-002: Paper Viewer Responsive Styles
+ * ============================================================ */
+
+/* 모바일: 탭으로 PDF/텍스트 전환 (분할 뷰 대신) */
+.viewer-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* 분할 뷰는 태블릿 이상에서만 표시 */
+.split-view-wrapper {
+  display: none;
+}
+
+/* 모바일용 탭 뷰 */
+.mobile-tab-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.mobile-tab-header {
+  display: flex;
+  border-bottom: 1px solid var(--gray-80, #e5e5e5);
+}
+
+.mobile-tab-button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.mobile-tab-button.active {
+  border-bottom: 2px solid var(--blue-50, #2563eb);
+  color: var(--blue-50, #2563eb);
+}
+
+.mobile-tab-content {
+  flex: 1;
+  overflow: auto;
+}
+
+@media (min-width: 640px) {
+  .split-view-wrapper {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .mobile-tab-view {
+    display: none;
+  }
+}
+
+/* 목차 사이드바 - 모바일에서 오버레이 */
+.toc-sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 280px;
+  z-index: 200;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+
+.toc-sidebar.open {
+  transform: translateX(0);
+}
+
+.toc-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 199;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.toc-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* 태블릿 이상에서는 mobile-only로 목차 오버레이 숨김 처리됨 */
+@media (min-width: 640px) {
+  .toc-overlay {
+    display: none;
+  }
+}
+
+/* ============================================================
+ * SCR-003: Papers List Responsive Styles
+ * ============================================================ */
+.papers-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .papers-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .papers-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1600px) {
+  .papers-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ============================================================
+ * Common Responsive Components
+ * ============================================================ */
+
+/* FAB (Floating Action Button) - 모바일에서만 표시 */
+.fab-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 100;
+}
+
+@media (min-width: 640px) {
+  .fab-container {
+    display: none;
+  }
+}
+
+/* 툴바 반응형 */
+.toolbar-responsive {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 12px;
+}
+
+@media (min-width: 640px) {
+  .toolbar-responsive {
+    flex-wrap: nowrap;
+    padding: 8px 16px;
+  }
+}
+
+/* 사이드 패널 - 모바일에서 풀스크린 */
+.side-panel {
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 150;
+}
+
+@media (min-width: 640px) {
+  .side-panel {
+    position: relative;
+    width: 320px;
+    height: auto;
+    z-index: auto;
+  }
+}
+
+@media (min-width: 1200px) {
+  .side-panel {
+    width: 360px;
+  }
+}
+
+/* ============================================================
+ * Touch-friendly targets for mobile
+ * ============================================================ */
+@media (pointer: coarse) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* ============================================================
+ * Safe area insets for notched devices
+ * ============================================================ */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0);
+}
+
+/* ============================================================
+ * Accessibility - Focus States
+ * ui-spec.yaml#accessibility
+ * ============================================================ */
+
+/* Focus visible for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--blue-50, #2563eb);
+  outline-offset: 2px;
+}
+
+/* Remove default focus styles for mouse users */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Skip to main content link (for screen readers) */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--blue-50, #2563eb);
+  color: white;
+  padding: 8px 16px;
+  z-index: 10000;
+  transition: top 0.2s;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .mobile-tab-button.active {
+    border-bottom-width: 3px;
+  }
+
+  .toc-sidebar {
+    border-right-width: 2px;
+  }
+}
+
+/* ============================================================
+ * Keyboard Navigation - Focus Order Enhancement
+ * ============================================================ */
+
+/* Focusable elements in proper order */
+[tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: 2px solid var(--blue-50, #2563eb);
+  outline-offset: 2px;
+}
+
+/* Interactive elements hover/focus states */
+button:not([disabled]):hover,
+[role="button"]:not([aria-disabled="true"]):hover {
+  opacity: 0.9;
+}
+
+button:not([disabled]):active,
+[role="button"]:not([aria-disabled="true"]):active {
+  transform: scale(0.98);
+}
+
+/* Screen reader only content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ============================================================
+ * Print Styles
+ * ============================================================ */
+@media print {
+  .mobile-only,
+  .fab-container,
+  .toc-sidebar,
+  .mobile-tab-header {
+    display: none !important;
+  }
+
+  .split-view-wrapper {
+    display: block !important;
+  }
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { TopAppBar } from "@qanda/qds4-web/TopAppBar";
 import { Button } from "@qanda/qds4-web/Button";
 import { IconButton } from "@qanda/qds4-web/IconButton";
@@ -26,6 +27,7 @@ const LogoutIcon = () => (
 );
 
 export function Header() {
+  const router = useRouter();
   const { user, authState, signOut, initialize } = useAuthStore();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -37,6 +39,11 @@ export function Header() {
   const handleSignOut = async () => {
     await signOut();
     setIsMenuOpen(false);
+  };
+
+  const handleMyPapers = () => {
+    setIsMenuOpen(false);
+    router.push("/papers");
   };
 
   const isAuthenticated = authState === "authenticated";
@@ -110,6 +117,19 @@ export function Header() {
           >
             {user?.email}
           </div>
+          <Divider />
+          <button
+            onClick={handleMyPapers}
+            className={`w-full px-4 py-3 text-left ${typography("body_1")}`}
+            style={{
+              color: COLOR.gray_10,
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            내 논문 목록
+          </button>
           <Divider />
         </div>
       </BottomSheet>

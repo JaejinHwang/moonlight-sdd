@@ -16,6 +16,7 @@ export interface Paper {
   updated_at: string;
   sections?: Section[];
   analysis?: Analysis;
+  file_url?: string; // Signed URL for PDF access (returned from API)
 }
 
 export type PaperStatus = "processing" | "ready" | "error";
@@ -113,3 +114,12 @@ export type TranslationState =
   | "translated"
   | "showing_both"
   | "error";
+
+// PDF Viewer state types (F-003)
+export type ViewerState = "idle" | "rendering" | "ready" | "error";
+
+// Rendered section for virtual scroll
+export interface RenderedSection extends Section {
+  estimatedHeight: number;
+  isVisible: boolean;
+}

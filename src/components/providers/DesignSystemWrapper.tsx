@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode, useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { DesignSystemProvider } from "@qanda/qds4-web/DesignSystemProvider";
 import { Header } from "@/components/layout";
 
@@ -11,6 +12,10 @@ interface DesignSystemWrapperProps {
 export function DesignSystemWrapper({ children }: DesignSystemWrapperProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
+  const pathname = usePathname();
+
+  // 논문 뷰어 페이지에서는 전역 Header 숨김 (자체 헤더 사용)
+  const hideGlobalHeader = pathname?.startsWith("/paper/");
 
   useEffect(() => {
     setMounted(true);
@@ -22,7 +27,7 @@ export function DesignSystemWrapper({ children }: DesignSystemWrapperProps) {
         qds4Root={mounted ? rootRef.current : null}
         portalRoot={mounted ? rootRef.current : null}
       >
-        <Header />
+        {!hideGlobalHeader && <Header />}
         <main>{children}</main>
       </DesignSystemProvider>
       <div id="qds4-portal" />

@@ -1,0 +1,100 @@
+implementation_result:
+  task_id: "TASK-010"
+  feature_id: "F-005"
+  completed_at: "2026-01-14T12:00:00+09:00"
+  implemented_by: "claude-code"
+
+  files_created:
+    - path: "src/app/api/papers/[id]/translate/route.ts"
+      lines: 295
+      purpose: "POST /api/papers/{id}/translate 엔드포인트 - 논문 번역 API"
+    - path: "src/hooks/useTranslation.ts"
+      lines: 145
+      purpose: "번역 상태 관리 훅 - F-005 상태 머신 구현"
+    - path: "src/components/viewer/TranslationToolbar.tsx"
+      lines: 200
+      purpose: "번역 토글 및 언어 선택 UI 컴포넌트"
+
+  files_modified:
+    - path: "src/components/viewer/SectionRenderer.tsx"
+      changes: "원문/번역 병행 표시 기능 추가, showBothTexts prop 지원"
+    - path: "src/components/viewer/PdfViewer.tsx"
+      changes: "섹션별 번역 데이터 지원, translations Map 및 showBothTexts prop 추가"
+    - path: "src/app/paper/[id]/page.tsx"
+      changes: "TranslationToolbar 통합, useTranslation 훅 연동"
+    - path: "src/hooks/index.ts"
+      changes: "useTranslation, SUPPORTED_LANGUAGES export 추가"
+
+  test_results:
+    total: 0
+    passed: 0
+    failed: 0
+    notes: "TDD 테스트는 미작성 (프로젝트에 테스트 프레임워크 미설정)"
+
+  spec_compliance:
+    states:
+      - name: "idle"
+        implemented: true
+        notes: "번역 대기 상태 - useTranslation 초기 상태"
+      - name: "translating"
+        implemented: true
+        notes: "번역 처리 중 - Spinner 표시, Switch disabled"
+      - name: "translated"
+        implemented: true
+        notes: "번역 완료 - 번역문 표시, 번역됨 인디케이터"
+      - name: "showing_both"
+        implemented: true
+        notes: "원문과 번역문 동시 표시 - SectionRenderer에서 처리"
+      - name: "error"
+        implemented: true
+        notes: "번역 에러 - 에러 메시지 표시, 재시도 버튼"
+
+    error_cases:
+      - code: "UNSUPPORTED_LANGUAGE"
+        implemented: true
+        notes: "지원하지 않는 언어 코드 입력 시 400 에러"
+      - code: "QUOTA_EXCEEDED"
+        implemented: true
+        notes: "Gemini API 할당량 초과 시 429 에러"
+      - code: "TRANSLATION_TIMEOUT"
+        implemented: true
+        notes: "번역 타임아웃 시 504 에러"
+      - code: "UNAUTHORIZED"
+        implemented: true
+        notes: "미인증 사용자 401 에러"
+      - code: "AI_API_ERROR"
+        implemented: true
+        notes: "Gemini API 일반 에러 500"
+
+    edge_cases:
+      - scenario: "수식이 포함된 텍스트"
+        implemented: true
+        notes: "Gemini 프롬프트에 수식 보존 가이드라인 포함"
+      - scenario: "전문 용어가 많은 텍스트"
+        implemented: true
+        notes: "학술 용어 정확성 유지 가이드라인 포함"
+
+  api_compliance:
+    endpoint: "POST /api/papers/{id}/translate"
+    request_format:
+      - "target_lang: ISO 639-1 언어 코드 (required)"
+      - "section_id: 특정 섹션만 번역 시 (optional)"
+    response_format:
+      - "translations: Translation[] - 번역 결과 배열"
+      - "cached: boolean - 캐시 사용 여부"
+    error_format:
+      - "error: { code, message }"
+
+  deviations: []
+
+  additional_features:
+    - name: "번역 결과 캐싱"
+      description: "translations 테이블에 번역 결과 저장, 동일 요청 시 캐시 반환"
+    - name: "8개 언어 지원"
+      description: "ko, en, ja, zh, es, fr, de, pt 지원"
+    - name: "섹션별 번역"
+      description: "전체 논문 또는 특정 섹션만 번역 가능"
+
+  next_tasks:
+    unblocked: ["TASK-011", "TASK-012", "TASK-013"]
+    notes: "TASK-011(하이라이트), TASK-012(요약), TASK-013(키워드)는 TASK-010과 의존성 동일"

@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { parsePdf } from "@/lib/pdf/parser";
 import type { Database } from "@/types/database";
 
+type PaperRow = Database["public"]["Tables"]["papers"]["Row"];
+
 // Constants from functional-spec.yaml#F-001
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ACCEPTED_MIME_TYPE = "application/pdf";
@@ -222,4 +224,81 @@ export async function POST(request: NextRequest) {
     },
     { status: 201 }
   );
+}
+
+/**
+ * GET /api/papers
+ * 사용자의 논문 목록 조회
+ *
+ * spec_refs:
+ * - ui-spec.yaml#SCR-003
+ * - TASK-014
+ *
+ * Query params:
+ * - search: 제목 검색 (optional)
+ * - status: 상태 필터 (optional)
+ * - sort: 정렬 기준 (optional, default: created_at)
+ * - order: 정렬 순서 (optional, default: desc)
+ */
+export async function GET(request: NextRequest) {
+  const supabase = await createClient();
+
+  // 1. Authentication check
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json(
+      { error: ErrorCodes.UNAUTHORIZED },
+      { status: 401 }
+    );
+  }
+
+  // 2. Parse query parameters
+  const { searchParams } = new URL(request.url);
+  const search = searchParams.get("search") || "";
+  const status = searchParams.get("status");
+  const sort = searchParams.get("sort") || "created_at";
+  const order = searchParams.get("order") || "desc";
+
+  // 3. Build query
+  let query = supabase
+    .from("papers")
+    .select("*")
+    .eq("user_id", user.id);
+
+  // 4. Apply search filter (title search)
+  if (search) {
+    query = query.ilike("title", `%${search}%`);
+  }
+
+  // 5. Apply status filter
+  if (status && ["processing", "ready", "error"].includes(status)) {
+    query = query.eq("status", status);
+  }
+
+  // 6. Apply sorting
+  const validSortFields = ["created_at", "updated_at", "title"];
+  const sortField = validSortFields.includes(sort) ? sort : "created_at";
+  const ascending = order === "asc";
+  query = query.order(sortField, { ascending });
+
+  // 7. Execute query
+  const { data: papers, error: queryError } = await query.returns<PaperRow[]>();
+
+  if (queryError) {
+    console.error("Papers query error:", queryError);
+    return NextResponse.json(
+      { error: ErrorCodes.DATABASE_ERROR },
+      { status: 500 }
+    );
+  }
+
+  // 8. Return papers list
+  return NextResponse.json({
+    papers: papers || [],
+    total: papers?.length || 0,
+  });
 }

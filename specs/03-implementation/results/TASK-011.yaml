@@ -1,0 +1,127 @@
+implementation_result:
+  task_id: "TASK-011"
+  feature_id: "F-006"
+  completed_at: "2026-01-14T14:30:00+09:00"
+  implemented_by: "claude-code"
+
+  files_created:
+    - path: "src/app/api/papers/[id]/highlights/route.ts"
+      lines: 274
+      purpose: "하이라이트 추출 API 엔드포인트 (POST/GET)"
+    - path: "src/hooks/useHighlight.ts"
+      lines: 159
+      purpose: "하이라이트 상태 관리 훅 (F-006 상태 머신 구현)"
+    - path: "src/components/viewer/ViewerToolbar.tsx"
+      lines: 300
+      purpose: "번역+하이라이트 통합 툴바 UI 컴포넌트"
+
+  files_modified:
+    - path: "src/hooks/index.ts"
+      changes: "useHighlight 훅 export 추가"
+    - path: "src/app/paper/[id]/page.tsx"
+      changes: "useHighlight 훅 연동, ViewerToolbar 교체, 하이라이트 props 전달"
+
+  test_results:
+    total: 0
+    passed: 0
+    failed: 0
+    note: "테스트 파일 미생성 (기존 프로젝트에 테스트 설정 없음)"
+
+  spec_compliance:
+    states:
+      - name: "idle"
+        implemented: true
+        description: "분석 대기 상태"
+      - name: "analyzing"
+        implemented: true
+        description: "AI 분석 중"
+      - name: "highlighted"
+        implemented: true
+        description: "하이라이트 표시 중"
+      - name: "hidden"
+        implemented: true
+        description: "하이라이트 숨김"
+      - name: "error"
+        implemented: true
+        description: "분석 에러"
+
+    error_cases:
+      - code: "AI_API_ERROR"
+        implemented: true
+        description: "핵심 내용 분석에 실패했습니다."
+      - code: "CONTENT_TOO_SHORT"
+        implemented: true
+        description: "분석할 내용이 충분하지 않습니다."
+      - code: "LANGUAGE_DETECTION_FAILED"
+        implemented: true
+        description: "논문 언어를 감지할 수 없습니다."
+
+    edge_cases:
+      - scenario: "모든 내용이 중요한 짧은 논문"
+        implemented: true
+        handling: "Gemini 프롬프트에서 상위 3-7개 문장만 하이라이트하도록 제한"
+      - scenario: "표/그림 캡션의 중요 내용"
+        implemented: true
+        handling: "섹션 content 전체를 분석하므로 캡션도 포함됨"
+
+    acceptance_criteria:
+      - ac: "AC-1: Given 논문이 뷰어에 로드되었을 때, When AI 분석이 완료되면, Then 핵심 문장들이 하이라이트되어 표시된다"
+        implemented: true
+        implementation: |
+          - ViewerToolbar의 '핵심 하이라이트' Switch 토글로 분석 시작
+          - useHighlight 훅에서 POST /api/papers/{id}/highlights 호출
+          - GeminiClient.extractHighlights()로 핵심 문장 추출
+          - PdfViewer에 highlights prop으로 전달
+          - SectionRenderer에서 yellow_20 배경색으로 하이라이트 렌더링
+
+      - ac: "AC-2: Given 하이라이트된 문장을 호버하면, When 툴팁이 표시되면, Then 하이라이트 이유가 표시된다"
+        implemented: true
+        implementation: |
+          - SectionRenderer에서 하이라이트된 span에 title 속성으로 reason 표시
+          - 기존 구현 (TASK-007 SectionRenderer.tsx)에서 cursor: 'help'로 호버 가능 표시
+
+  deviations: []
+
+  api_endpoints:
+    - method: "POST"
+      path: "/api/papers/{id}/highlights"
+      description: "AI 분석으로 핵심 문장 추출"
+      request_body:
+        section_id: "string | null (특정 섹션만 분석할 때)"
+        force_refresh: "boolean (캐시 무시하고 재분석)"
+      response:
+        highlights: "Highlight[] (id, text, sectionId, importance, reason)"
+        cached: "boolean"
+
+    - method: "GET"
+      path: "/api/papers/{id}/highlights"
+      description: "저장된 하이라이트 조회"
+      response:
+        highlights: "Highlight[]"
+
+  state_machine:
+    name: "HighlightStateMachine"
+    initial: "idle"
+    transitions:
+      - from: "idle"
+        to: "analyzing"
+        trigger: "analyze_requested"
+      - from: "analyzing"
+        to: "highlighted"
+        trigger: "analysis_success"
+      - from: "analyzing"
+        to: "error"
+        trigger: "analysis_failed"
+      - from: "highlighted"
+        to: "hidden"
+        trigger: "toggle_off"
+      - from: "hidden"
+        to: "highlighted"
+        trigger: "toggle_on"
+      - from: "error"
+        to: "analyzing"
+        trigger: "retry"
+
+  next_tasks:
+    unblocked: []
+    note: "TASK-012 (논문 요약), TASK-013 (키워드 추출)은 이미 TASK-007, TASK-009 완료로 unblocked됨"

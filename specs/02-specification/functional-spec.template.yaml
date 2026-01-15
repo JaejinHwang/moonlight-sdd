@@ -16,7 +16,20 @@ functional_spec:
       
       # 선행되어야 하는 다른 기능
       dependencies: []  # 예: ["F-002", "F-003"]
-      
+
+      # 명확화된 결정사항 (Clarifications)
+      # 모호한 부분에 대해 사용자에게 질문하여 확정된 내용
+      # 참조: templates/clarification-taxonomy.yaml
+      clarifications:
+        - category: "{{category_name}}"  # 예: "Rendering & Display"
+          question: "{{question}}"        # 예: "렌더링 방식"
+          options_considered:
+            - "{{option_1}}"
+            - "{{option_2}}"
+          decision: "{{user_decision}}"   # 사용자가 선택한 답변
+          rationale: "{{reason}}"         # 선택 이유 (선택사항)
+          asked_at: "{{timestamp}}"       # ISO 형식
+
       # 상태 다이어그램
       # 이 기능이 가질 수 있는 모든 상태와 전이 조건
       states:

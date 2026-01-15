@@ -70,13 +70,25 @@ technical_spec:
       - name: "Supabase Storage"
         responsibility: "PDF 파일 저장"
         technology: "Supabase Storage"
+        bucket_config:
+          name: "papers"
+          public: false  # Private bucket - signed URL 필요
+          file_structure: "{user_id}/{timestamp}_{sanitized_filename}"
+          signed_url_expiry: 3600  # 1시간 (초)
         interfaces:
-          provides: ["File Storage"]
+          provides: ["File Storage", "Signed URLs"]
           consumes: []
 
-      - name: "Gemini API"
+      - name: "Gemini API (via Vertex AI)"
         responsibility: "번역, 요약, 키워드 추출, 하이라이트 분석"
-        technology: "Google Gemini API"
+        technology: "Google Vertex AI (Gemini)"
+        auth_method: "Application Default Credentials (gcloud auth login)"
+        configuration:
+          package: "@google-cloud/vertexai"
+          model: "gemini-2.0-flash-001"
+          env_vars:
+            - "GOOGLE_CLOUD_PROJECT: GCP 프로젝트 ID"
+            - "GOOGLE_CLOUD_LOCATION: Vertex AI 리전 (기본값: us-central1)"
         interfaces:
           provides: ["AI Text Processing"]
           consumes: []
@@ -320,7 +332,7 @@ technical_spec:
 
       - path: "/papers/{id}"
         method: "GET"
-        description: "논문 상세 정보 조회"
+        description: "논문 상세 정보 조회 (PDF signed URL 포함)"
         feature: "F-003"
         auth_required: true
 
@@ -332,16 +344,27 @@ technical_spec:
           success:
             status: 200
             body:
-              id: "UUID"
-              title: "string"
+              paper:
+                id: "UUID"
+                title: "string"
+                file_path: "string"
+                file_url: "string | null"  # Supabase Storage signed URL (1시간 유효)
+                file_size: "number"
+                page_count: "number"
+                language: "string"
+                status: "string"
+                created_at: "timestamp"
+                updated_at: "timestamp"
               sections: "Section[]"
-              status: "string"
-              analysis: "Analysis | null"
           errors:
             - status: 404
               code: "PAPER_NOT_FOUND"
               body:
                 message: "논문을 찾을 수 없습니다."
+          notes:
+            - "file_url은 Supabase Storage createSignedUrl()로 생성된 1시간 유효 URL"
+            - "Private bucket 접근을 위해 signed URL 필수 사용"
+            - "file_url 생성 실패 시 null 반환 (file_path는 항상 존재)"
 
       - path: "/papers/{id}"
         method: "DELETE"
@@ -471,6 +494,43 @@ technical_spec:
         - "색상은 COLOR 토큰만 사용 (하드코딩 금지)"
         - "타이포그래피는 typography() 함수만 사용"
         - "다른 UI 라이브러리 (shadcn/ui 등) 사용 금지"
+
+    # PDF 렌더링 의존성 (PDF.js 기반)
+    pdf_rendering:
+      package: "react-pdf"
+      version: "^9.x"
+      peer_dependency: "pdfjs-dist"
+      purpose: "PDF 원본 파일을 브라우저에서 렌더링"
+      setup: |
+        // PDF.js worker 설정 필수
+        import { pdfjs } from 'react-pdf';
+        pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+
+        // 또는 로컬 worker 사용
+        // pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+        //   'pdfjs-dist/build/pdf.worker.min.mjs',
+        //   import.meta.url,
+        // ).toString();
+      components:
+        - name: "Document"
+          description: "PDF 문서 로더"
+          props: ["file", "onLoadSuccess", "onLoadError", "loading"]
+        - name: "Page"
+          description: "PDF 페이지 렌더러"
+          props: ["pageNumber", "scale", "width", "renderTextLayer", "renderAnnotationLayer"]
+      notes:
+        - "Next.js에서 사용 시 'use client' 지시문 필수"
+        - "SSR 비활성화 필요 (dynamic import with ssr: false)"
+        - "PDF 파일은 Supabase Storage URL 또는 File 객체로 전달"
+
+    # 수식 렌더링 의존성
+    math_rendering:
+      package: "katex"
+      version: "^0.16.x"
+      purpose: "LaTeX 수식을 HTML로 렌더링"
+      setup: |
+        import 'katex/dist/katex.min.css';
+        import katex from 'katex';
 
   # 기술 의사결정 기록
   adrs:

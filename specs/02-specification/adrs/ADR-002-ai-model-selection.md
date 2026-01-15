@@ -1,7 +1,7 @@
 # ADR-002: AI 모델 선택
 
 ## Status
-Accepted
+Accepted (Updated: Vertex AI 방식으로 전환)
 
 ## Context
 논문 번역, 요약, 키워드 추출, 하이라이트 분석을 위한 AI 모델/API를 선택해야 한다. 다음 요구사항을 충족해야 한다:
@@ -12,7 +12,13 @@ Accepted
 - 빠른 응답 속도
 
 ## Decision
-**Google Gemini API**를 AI 서비스로 선택한다.
+**Google Vertex AI (Gemini)**를 AI 서비스로 선택한다.
+
+### Update (2025-01)
+기존 Gemini API Key 방식에서 **Vertex AI** 방식으로 전환하였다:
+- 인증: API Key → Application Default Credentials (gcloud auth login)
+- 패키지: @google/generative-ai → @google-cloud/vertexai
+- 모델: gemini-2.0-flash → gemini-2.0-flash-001
 
 ## Alternatives Considered
 
@@ -67,11 +73,35 @@ Accepted
 - Rate limit 관리 필요
 
 ## Implementation Notes
-- Gemini 1.5 Flash를 기본으로 사용 (빠른 응답, 저비용)
-- 복잡한 분석은 Gemini 1.5 Pro 사용
-- 요청 실패 시 재시도 로직 구현
-- 토큰 사용량 모니터링 대시보드 구축
+- Gemini 2.0 Flash를 기본으로 사용 (빠른 응답, 저비용)
+- 복잡한 분석은 Gemini 1.5 Pro 사용 가능
+- 요청 실패 시 재시도 로직 구현 (최대 3회, exponential backoff)
+- 토큰 사용량 모니터링 로깅 구현
+
+### Vertex AI 설정
+```bash
+# 1. gcloud CLI 인증
+gcloud auth login
+gcloud auth application-default login
+
+# 2. 환경 변수 설정
+export GOOGLE_CLOUD_PROJECT=your-project-id
+export GOOGLE_CLOUD_LOCATION=us-central1  # optional, default: us-central1
+```
+
+### 코드 예시
+```typescript
+import { getGeminiClient } from "@/lib/gemini";
+
+// Application Default Credentials 사용 (gcloud auth login)
+const client = getGeminiClient();
+const result = await client.translate({
+  text: "Hello, world!",
+  targetLang: "ko",
+});
+```
 
 ## References
-- [Gemini API Documentation](https://ai.google.dev/docs)
-- [Gemini Pricing](https://ai.google.dev/pricing)
+- [Vertex AI Gemini Documentation](https://cloud.google.com/vertex-ai/docs/generative-ai/model-reference/gemini)
+- [Vertex AI Pricing](https://cloud.google.com/vertex-ai/pricing)
+- [Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials)

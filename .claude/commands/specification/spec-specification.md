@@ -54,6 +54,102 @@ requirements.yaml의 각 user_story를 분석하여 기능으로 분해합니다
 - F-002: PDF 파싱 및 구조화
 맞나요? 수정이 필요하면 말씀해주세요."
 
+---
+
+### Stage 4-1: 모호성 스캔 및 명확화 (Clarification)
+
+Feature 분해 확인 후, 각 Feature에 대해 모호성 스캔을 수행합니다.
+
+> **참조:** `templates/clarification-taxonomy.yaml`
+
+**모호성 스캔 프로세스:**
+
+1. 각 Feature의 name, description을 Taxonomy의 8개 카테고리로 분석
+2. 각 카테고리를 **Clear / Partial / Missing** 중 하나로 평가
+3. Partial 또는 Missing인 카테고리에서 질문 후보 생성
+4. **Impact × Uncertainty** 점수로 우선순위 정렬
+5. Feature당 **최대 5개** 질문만 선택
+
+**Taxonomy 카테고리:**
+
+| ID | 카테고리 | 감지 키워드 |
+|----|----------|------------|
+| CAT-001 | Rendering & Display | 뷰어, 표시, 렌더링, 보여 |
+| CAT-002 | Data Source & Flow | 가져오, 조회, 데이터, 불러 |
+| CAT-003 | State Persistence | 저장, 기억, 유지, 보관 |
+| CAT-004 | User Interaction | 입력, 선택, 클릭, 드래그 |
+| CAT-005 | Error Recovery | 실패, 에러, 재시도 |
+| CAT-006 | Performance Tradeoff | 처리, 변환, 분석, 대량 |
+| CAT-007 | Scope Boundary | 관리, 지원, 기능 |
+| CAT-008 | External Dependency | API, 서비스, 외부, 연동 |
+
+**질문 형식:**
+
+각 질문은 한 번에 하나씩, 다음 형식으로 제시:
+
+```markdown
+**F-003 "PDF 뷰어"에 대해 확인이 필요합니다.**
+
+📌 **렌더링 방식**
+
+**Recommended:** Option A - PDF 원본을 그대로 보여주는 것이 "뷰어"의 일반적 의미에 부합합니다.
+
+| Option | Description |
+|--------|-------------|
+| A | 원본 PDF를 그대로 표시 (PDF.js 사용) |
+| B | PDF에서 추출한 텍스트/이미지를 표시 |
+| Short | 다른 방식 직접 입력 (5단어 이내) |
+
+옵션 문자(A, B)로 답하거나, "yes"로 추천안을 수락하세요.
+```
+
+**답변 처리 규칙:**
+
+- 사용자가 "yes", "recommended" 응답 → 추천안 채택
+- 사용자가 옵션 문자 응답 (A, B 등) → 해당 옵션 채택
+- 사용자가 직접 입력 → 5단어 이내인지 확인 후 채택
+- 모호한 답변 → 재질문 (질문 카운트에 포함 안 됨)
+
+**스펙 기록:**
+
+답변이 확정되면 즉시 Feature의 `clarifications` 섹션에 기록:
+
+```yaml
+clarifications:
+  - category: "Rendering & Display"
+    question: "렌더링 방식"
+    options_considered:
+      - "원본 PDF를 그대로 표시 (PDF.js)"
+      - "PDF에서 추출한 텍스트/이미지를 표시"
+    decision: "원본 PDF를 그대로 표시 (PDF.js)"
+    rationale: "사용자가 논문의 원본 레이아웃 보존 원함"
+    asked_at: "2024-01-15T10:30:00Z"
+```
+
+**동시에 관련 섹션도 업데이트:**
+
+| 카테고리 | 업데이트 대상 |
+|----------|--------------|
+| Rendering & Display | description, outputs.format |
+| Data Source & Flow | inputs, states |
+| State Persistence | outputs, states |
+| Error Recovery | error_cases, states |
+
+**질문 스킵 조건:**
+
+다음 경우 질문하지 않음:
+- 구현/검증에 영향 없는 사소한 디테일
+- technical-spec이나 ui-spec에서 결정될 사항
+- 명백한 베스트 프랙티스가 있는 경우
+- 이미 다른 Feature에서 동일한 질문에 답변한 경우
+
+**조기 종료:**
+
+- 사용자가 "done", "skip", "proceed" 응답 시 해당 Feature의 질문 종료
+- 5개 질문 완료 시 자동 종료
+
+---
+
 각 Feature에 대해 자동 생성:
 ```yaml
 features:

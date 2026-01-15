@@ -16,6 +16,10 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className="antialiased">
+        {/* Skip link for keyboard navigation - ui-spec.yaml#accessibility */}
+        <a href="#main-content" className="skip-link">
+          본문으로 건너뛰기
+        </a>
         <DesignSystemWrapper>{children}</DesignSystemWrapper>
       </body>
     </html>

@@ -1,0 +1,170 @@
+implementation_result:
+  task_id: "TASK-013"
+  feature_id: "F-008"
+  completed_at: "2026-01-14T18:30:00+09:00"
+  implemented_by: "claude-code"
+
+  files_created:
+    - path: "src/app/api/papers/[id]/keywords/route.ts"
+      lines: 262
+      purpose: "키워드 추출 API 엔드포인트 (POST/GET)"
+    - path: "src/app/api/papers/[id]/keywords/[term]/explain/route.ts"
+      lines: 150
+      purpose: "키워드 설명 API 엔드포인트 (GET)"
+    - path: "src/hooks/useKeyword.ts"
+      lines: 142
+      purpose: "키워드 상태 관리 훅 (F-008.states 구현)"
+    - path: "src/components/viewer/KeywordPanel.tsx"
+      lines: 312
+      purpose: "키워드 목록 패널 UI 컴포넌트"
+    - path: "src/components/viewer/KeywordExplanationModal.tsx"
+      lines: 266
+      purpose: "키워드 설명 모달 컴포넌트"
+
+  files_modified:
+    - path: "src/hooks/index.ts"
+      changes: "useKeyword, KeywordState, KeywordExplanation 타입 export 추가"
+    - path: "src/components/viewer/ViewerToolbar.tsx"
+      changes: "키워드 버튼 추가, KeywordState 타입 및 관련 props 추가"
+    - path: "src/app/paper/[id]/page.tsx"
+      changes: "useKeyword 훅 통합, KeywordPanel 및 KeywordExplanationModal 렌더링 추가"
+    - path: "specs/03-implementation/task-queue.yaml"
+      changes: "TASK-013 status를 completed로 업데이트"
+
+  test_results:
+    total: 0
+    passed: 0
+    failed: 0
+    note: "테스트는 /verify TASK-013으로 별도 수행 필요"
+
+  spec_compliance:
+    states:
+      - name: "idle"
+        implemented: true
+        description: "추출 대기 상태 - 키워드 추출 버튼 표시"
+      - name: "extracting"
+        implemented: true
+        description: "키워드 추출 중 - Spinner 표시"
+      - name: "ready"
+        implemented: true
+        description: "키워드 목록 표시 - 중요도별 그룹화"
+      - name: "explaining"
+        implemented: true
+        description: "키워드 설명 생성 중 - 모달에 Spinner 표시"
+      - name: "error"
+        implemented: true
+        description: "추출/설명 실패 - 에러 메시지 및 재시도 버튼 표시"
+
+    error_cases:
+      - code: "KEYWORD_EXTRACTION_FAILED"
+        implemented: true
+        description: "키워드 추출 실패 시 에러 처리"
+      - code: "KEYWORD_NOT_FOUND"
+        implemented: true
+        description: "논문에서 키워드를 찾을 수 없을 때 에러 처리"
+      - code: "EXPLANATION_FAILED"
+        implemented: true
+        description: "키워드 설명 생성 실패 시 에러 처리"
+      - code: "PAPER_NOT_FOUND"
+        implemented: true
+        description: "논문을 찾을 수 없을 때 에러 처리"
+      - code: "UNAUTHORIZED"
+        implemented: true
+        description: "인증되지 않은 사용자 에러 처리"
+      - code: "CONTENT_TOO_SHORT"
+        implemented: true
+        description: "분석할 내용이 충분하지 않을 때 에러 처리"
+
+    edge_cases:
+      - scenario: "논문 내용이 100자 미만"
+        implemented: true
+        description: "CONTENT_TOO_SHORT 에러 반환"
+      - scenario: "키워드가 논문에서 발견되지 않음"
+        implemented: true
+        description: "KEYWORD_NOT_FOUND 에러 반환"
+      - scenario: "기존 키워드 캐시 존재"
+        implemented: true
+        description: "캐시된 키워드 반환 (force_refresh 옵션으로 재추출 가능)"
+
+    acceptance_criteria:
+      - id: "AC-1"
+        description: "Given 논문이 뷰어에 로드되었을 때, When AI 분석이 완료되면, Then 핵심 키워드 목록이 추출되어 표시된다"
+        implemented: true
+        implementation_details:
+          - "POST /api/papers/{id}/keywords 엔드포인트로 키워드 추출"
+          - "Gemini API의 extractKeywords 메서드 활용"
+          - "중요도별(high/medium/low) 그룹화된 UI 제공"
+          - "빈도수 표시 및 analysis 테이블에 캐싱"
+      - id: "AC-2"
+        description: "Given 키워드 목록이 표시되었을 때, When 키워드를 클릭하면, Then 논문 맥락 내에서의 키워드 설명이 표시된다"
+        implemented: true
+        implementation_details:
+          - "GET /api/papers/{id}/keywords/{term}/explain 엔드포인트"
+          - "Gemini API의 explainKeyword 메서드 활용"
+          - "KeywordExplanationModal로 정의, 논문 맥락, 관련 용어 표시"
+          - "ESC 키 또는 배경 클릭으로 모달 닫기"
+
+  deviations: []
+
+  api_endpoints:
+    - path: "POST /api/papers/{id}/keywords"
+      description: "키워드 추출 API"
+      request_body:
+        force_refresh: "boolean (optional) - 캐시 무시 여부"
+        max_keywords: "number (optional, default: 15) - 최대 키워드 수"
+      response:
+        keywords: "Keyword[] - 추출된 키워드 목록"
+        cached: "boolean - 캐시 사용 여부"
+    - path: "GET /api/papers/{id}/keywords"
+      description: "기존 키워드 조회 API"
+      response:
+        keywords: "Keyword[] - 저장된 키워드 목록"
+    - path: "GET /api/papers/{id}/keywords/{term}/explain"
+      description: "키워드 설명 API"
+      response:
+        term: "string - 키워드"
+        definition: "string - 정의"
+        context_in_paper: "string - 논문 맥락 내 설명"
+        related_terms: "string[] - 관련 용어"
+
+  components_created:
+    - name: "KeywordPanel"
+      path: "src/components/viewer/KeywordPanel.tsx"
+      features:
+        - "키워드 목록 표시 (중요도별 그룹화)"
+        - "키워드 추출 버튼"
+        - "빈도수 배지"
+        - "호버 시 스타일 변경"
+        - "로딩/에러 상태 처리"
+    - name: "KeywordExplanationModal"
+      path: "src/components/viewer/KeywordExplanationModal.tsx"
+      features:
+        - "정의 섹션"
+        - "논문 맥락 섹션"
+        - "관련 용어 태그"
+        - "ESC 키 및 배경 클릭으로 닫기"
+        - "로딩/에러 상태 처리"
+
+  hooks_created:
+    - name: "useKeyword"
+      path: "src/hooks/useKeyword.ts"
+      states:
+        - "idle → extracting → ready/error"
+        - "ready → explaining → ready"
+      methods:
+        - "extractKeywords() - 키워드 추출"
+        - "explainKeyword(term) - 키워드 설명 요청"
+        - "clearExplanation() - 설명 모달 닫기"
+        - "retry() - 재시도"
+
+  next_tasks:
+    unblocked: []
+    recommendations:
+      - "TASK-014 (내 논문 목록 페이지) 진행 권장"
+      - "/verify TASK-013으로 구현 검증 수행 권장"
+
+  notes:
+    - "Gemini API의 extractKeywords, explainKeyword 메서드는 TASK-009에서 이미 구현되어 있음"
+    - "프롬프트는 src/lib/gemini/prompts.ts에 정의되어 있음"
+    - "analysis 테이블에 keywords 필드로 캐싱"
+    - "QDS4 디자인 시스템 컴포넌트 사용 (Tag, Button, Spinner 등)"

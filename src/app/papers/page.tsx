@@ -142,6 +142,12 @@ export default function PapersPage() {
     </Icon>
   );
 
+  const ClearIconComponent = (props: { size?: number; color?: keyof typeof COLOR }) => (
+    <Icon {...props}>
+      <ClearIcon />
+    </Icon>
+  );
+
   // Loading state
   if (authState === "loading" || loadingState === "loading") {
     return (
@@ -247,25 +253,22 @@ export default function PapersPage() {
               aria-label="논문 검색"
             />
             {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
+              <div
                 style={{
                   position: "absolute",
-                  right: "12px",
+                  right: "8px",
                   top: "50%",
                   transform: "translateY(-50%)",
-                  width: "20px",
-                  height: "20px",
-                  color: COLOR.gray_50,
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: 0,
                 }}
-                aria-label="검색어 지우기"
               >
-                <ClearIcon />
-              </button>
+                <IconButton
+                  iconSize={20}
+                  style="clear"
+                  Icon={ClearIconComponent}
+                  onClick={() => setSearchQuery("")}
+                  aria-label="검색어 지우기"
+                />
+              </div>
             )}
           </div>
 
@@ -357,27 +360,34 @@ export default function PapersPage() {
       </main>
 
       {/* FAB for mobile - ui-spec.yaml#SCR-003.components.upload_fab */}
-      <div className="fab-container mobile-only">
-        <button
-          onClick={() => router.push("/")}
-          aria-label="새 논문 업로드"
+      <div
+        className="fab-container mobile-only"
+        style={{
+          position: "fixed",
+          bottom: "24px",
+          right: "24px",
+        }}
+      >
+        <div
           style={{
             width: "56px",
             height: "56px",
             borderRadius: "16px",
             backgroundColor: COLOR.blue_50,
-            border: "none",
-            cursor: "pointer",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+            boxShadow: `0 4px 12px color-mix(in srgb, ${COLOR.gray_10} 20%, transparent)`,
           }}
         >
-          <div style={{ width: "24px", height: "24px", color: COLOR.gray_100 }}>
-            <AddIcon />
-          </div>
-        </button>
+          <IconButton
+            iconSize={24}
+            style="clear"
+            Icon={AddIconComponent}
+            onClick={() => router.push("/")}
+            aria-label="새 논문 업로드"
+          />
+        </div>
       </div>
 
       {/* Delete confirmation dialog */}
@@ -389,7 +399,7 @@ export default function PapersPage() {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            backgroundColor: `color-mix(in srgb, ${COLOR.gray_10} 50%, transparent)`,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -404,7 +414,7 @@ export default function PapersPage() {
               padding: "24px",
               maxWidth: "400px",
               width: "calc(100% - 32px)",
-              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+              boxShadow: `0 8px 32px color-mix(in srgb, ${COLOR.gray_10} 20%, transparent)`,
             }}
             onClick={(e) => e.stopPropagation()}
           >

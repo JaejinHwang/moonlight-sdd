@@ -197,28 +197,14 @@ export function ViewerToolbar({
       >
         {/* Language selector */}
         <div style={{ position: "relative" }}>
-          <button
+          <Button
+            variant="outlined"
+            size="s"
             onClick={() => setIsLangSelectorOpen(!isLangSelectorOpen)}
             disabled={isTranslating}
-            className={typography("body_2")}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-              padding: "6px 12px",
-              border: `1px solid ${COLOR.gray_70}`,
-              borderRadius: "6px",
-              backgroundColor: COLOR.gray_100,
-              color: COLOR.gray_20,
-              cursor: isTranslating ? "not-allowed" : "pointer",
-              opacity: isTranslating ? 0.5 : 1,
-            }}
           >
-            <span>{currentLangName}</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M7 10l5 5 5-5z" />
-            </svg>
-          </button>
+            {`${currentLangName} ▼`}
+          </Button>
 
           {/* Language dropdown */}
           {isLangSelectorOpen && (
@@ -232,7 +218,7 @@ export function ViewerToolbar({
                 backgroundColor: COLOR.gray_100,
                 border: `1px solid ${COLOR.gray_80}`,
                 borderRadius: "8px",
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                boxShadow: `0 4px 12px color-mix(in srgb, ${COLOR.gray_10} 15%, transparent)`,
                 zIndex: 100,
                 overflow: "hidden",
               }}
@@ -396,62 +382,24 @@ export function ViewerToolbar({
 
       {/* Summary Section - TASK-012, functional-spec.yaml#F-007 */}
       {onToggleSummaryPanel && (
-        <button
+        <Button
+          variant={isSummaryPanelOpen ? "tonal" : "outlined"}
+          size="s"
           onClick={onToggleSummaryPanel}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "6px 12px",
-            border: isSummaryPanelOpen
-              ? `1px solid ${COLOR.blue_50}`
-              : `1px solid ${COLOR.gray_70}`,
-            borderRadius: "6px",
-            backgroundColor: isSummaryPanelOpen ? COLOR.blue_95 : "transparent",
-            cursor: "pointer",
-          }}
         >
-          <SummaryIcon active={isSummaryPanelOpen} />
-          <span
-            className={typography("body_2")}
-            style={{
-              color: isSummaryPanelOpen ? COLOR.blue_50 : COLOR.gray_40,
-            }}
-          >
-            요약
-          </span>
-          {summaryState === "summarizing" && <Spinner size={16} />}
-        </button>
+          {summaryState === "summarizing" ? "요약 중..." : "요약"}
+        </Button>
       )}
 
       {/* Keyword Section - TASK-013, functional-spec.yaml#F-008 */}
       {onToggleKeywordPanel && (
-        <button
+        <Button
+          variant={isKeywordPanelOpen ? "tonal" : "outlined"}
+          size="s"
           onClick={onToggleKeywordPanel}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "6px 12px",
-            border: isKeywordPanelOpen
-              ? `1px solid ${COLOR.blue_50}`
-              : `1px solid ${COLOR.gray_70}`,
-            borderRadius: "6px",
-            backgroundColor: isKeywordPanelOpen ? COLOR.blue_95 : "transparent",
-            cursor: "pointer",
-          }}
         >
-          <KeywordIcon active={isKeywordPanelOpen} />
-          <span
-            className={typography("body_2")}
-            style={{
-              color: isKeywordPanelOpen ? COLOR.blue_50 : COLOR.gray_40,
-            }}
-          >
-            키워드
-          </span>
-          {keywordState === "extracting" && <Spinner size={16} />}
-        </button>
+          {keywordState === "extracting" ? "추출 중..." : "키워드"}
+        </Button>
       )}
 
       {/* Close dropdown when clicking outside */}

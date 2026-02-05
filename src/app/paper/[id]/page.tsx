@@ -9,6 +9,7 @@ import { LoadingAnimation } from "@qanda/qds4-web/LoadingAnimation";
 import { IconButton } from "@qanda/qds4-web/IconButton";
 import { Icon } from "@qanda/qds4-web/Icon";
 import { TopAppBar } from "@qanda/qds4-web/TopAppBar";
+import { Button } from "@qanda/qds4-web/Button";
 import type { Paper, Section, ViewerState } from "@/types";
 import { PdfViewer, type PdfViewerRef, type SectionTranslation } from "@/components/viewer/PdfViewer";
 import { SplitViewLayout } from "@/components/viewer/SplitViewLayout";
@@ -376,20 +377,13 @@ export default function PaperViewerPage() {
             >
               {error.recovery}
             </span>
-            <button
+            <Button
+              variant="accent"
+              size="m"
               onClick={handleRetry}
-              className={typography("body_1_strong")}
-              style={{
-                padding: "12px 24px",
-                backgroundColor: COLOR.blue_50,
-                color: COLOR.gray_100,
-                border: "none",
-                borderRadius: "8px",
-                cursor: "pointer",
-              }}
             >
               다시 시도
-            </button>
+            </Button>
           </div>
         )}
 
@@ -454,20 +448,20 @@ export default function PaperViewerPage() {
               <div className="mobile-tab-view">
                 {/* 탭 헤더 */}
                 <div className="mobile-tab-header" style={{ backgroundColor: COLOR.gray_95 }}>
-                  <button
-                    className={`mobile-tab-button ${mobileActiveTab === "pdf" ? "active" : ""}`}
+                  <Button
+                    variant={mobileActiveTab === "pdf" ? "tonal" : "neutral"}
+                    size="s"
                     onClick={() => setMobileActiveTab("pdf")}
-                    style={{ color: mobileActiveTab === "pdf" ? COLOR.blue_50 : COLOR.gray_50 }}
                   >
                     PDF 원본
-                  </button>
-                  <button
-                    className={`mobile-tab-button ${mobileActiveTab === "text" ? "active" : ""}`}
+                  </Button>
+                  <Button
+                    variant={mobileActiveTab === "text" ? "tonal" : "neutral"}
+                    size="s"
                     onClick={() => setMobileActiveTab("text")}
-                    style={{ color: mobileActiveTab === "text" ? COLOR.blue_50 : COLOR.gray_50 }}
                   >
                     텍스트 / 번역
-                  </button>
+                  </Button>
                 </div>
 
                 {/* 탭 콘텐츠 */}

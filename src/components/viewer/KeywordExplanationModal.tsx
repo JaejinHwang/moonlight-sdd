@@ -20,13 +20,22 @@ import { typography } from "@qanda/qds4-web/Typography";
 import { COLOR } from "@qanda/qds4-web/base.ts";
 import { Spinner } from "@qanda/qds4-web/Spinner";
 import { Tag } from "@qanda/qds4-web/Tag";
+import { IconButton } from "@qanda/qds4-web/IconButton";
+import { Icon } from "@qanda/qds4-web/Icon";
+import { Button } from "@qanda/qds4-web/Button";
 import type { KeywordExplanation } from "@/hooks/useKeyword";
 
 // Icons
 const CloseIcon = () => (
-  <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+  <svg viewBox="0 0 24 24" fill="currentColor" width="100%" height="100%">
     <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
   </svg>
+);
+
+const CloseIconComponent = (props: { size?: number; color?: keyof typeof COLOR }) => (
+  <Icon {...props}>
+    <CloseIcon />
+  </Icon>
 );
 
 const BookIcon = () => (
@@ -112,7 +121,7 @@ export function KeywordExplanationModal({
       style={{
         position: "fixed",
         inset: 0,
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        backgroundColor: `color-mix(in srgb, ${COLOR.gray_10} 50%, transparent)`,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -133,7 +142,7 @@ export function KeywordExplanationModal({
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
-          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+          boxShadow: `0 8px 32px color-mix(in srgb, ${COLOR.gray_10} 20%, transparent)`,
         }}
       >
         {/* Header */}
@@ -156,24 +165,13 @@ export function KeywordExplanationModal({
           >
             {keyword || "키워드"}
           </h2>
-          <button
+          <IconButton
+            iconSize={20}
+            style="clear"
+            Icon={CloseIconComponent}
             onClick={onClose}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "36px",
-              height: "36px",
-              border: "none",
-              borderRadius: "8px",
-              backgroundColor: "transparent",
-              color: COLOR.gray_50,
-              cursor: "pointer",
-            }}
             aria-label="닫기"
-          >
-            <CloseIcon />
-          </button>
+          />
         </div>
 
         {/* Content */}
@@ -348,20 +346,13 @@ export function KeywordExplanationModal({
             borderTop: `1px solid ${COLOR.gray_80}`,
           }}
         >
-          <button
+          <Button
+            variant="neutral"
+            size="m"
             onClick={onClose}
-            className={typography("body_2_strong")}
-            style={{
-              padding: "10px 20px",
-              border: "none",
-              borderRadius: "8px",
-              backgroundColor: COLOR.gray_90,
-              color: COLOR.gray_30,
-              cursor: "pointer",
-            }}
           >
             닫기
-          </button>
+          </Button>
         </div>
       </div>
     </div>

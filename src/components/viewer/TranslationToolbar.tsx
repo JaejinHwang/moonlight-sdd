@@ -104,28 +104,14 @@ export function TranslationToolbar({
     >
       {/* Language selector */}
       <div style={{ position: "relative" }}>
-        <button
+        <Button
+          variant="outlined"
+          size="s"
           onClick={() => setIsLangSelectorOpen(!isLangSelectorOpen)}
           disabled={isTranslating}
-          className={typography("body_2")}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "4px",
-            padding: "6px 12px",
-            border: `1px solid ${COLOR.gray_70}`,
-            borderRadius: "6px",
-            backgroundColor: COLOR.gray_100,
-            color: COLOR.gray_20,
-            cursor: isTranslating ? "not-allowed" : "pointer",
-            opacity: isTranslating ? 0.5 : 1,
-          }}
         >
-          <span>{currentLangName}</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M7 10l5 5 5-5z" />
-          </svg>
-        </button>
+          {`${currentLangName} ▼`}
+        </Button>
 
         {/* Language dropdown */}
         {isLangSelectorOpen && (
@@ -139,7 +125,7 @@ export function TranslationToolbar({
               backgroundColor: COLOR.gray_100,
               border: `1px solid ${COLOR.gray_80}`,
               borderRadius: "8px",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+              boxShadow: `0 4px 12px color-mix(in srgb, ${COLOR.gray_10} 15%, transparent)`,
               zIndex: 100,
               overflow: "hidden",
             }}

@@ -100,8 +100,8 @@ export function PaperCard({ paper, onDelete, isDeleting }: PaperCardProps) {
         transition: "box-shadow 0.2s ease, transform 0.2s ease",
         position: "relative",
         boxShadow: isHovered
-          ? "0 4px 12px rgba(0, 0, 0, 0.15)"
-          : "0 2px 4px rgba(0, 0, 0, 0.1)",
+          ? `0 4px 12px color-mix(in srgb, ${COLOR.gray_10} 15%, transparent)`
+          : `0 2px 4px color-mix(in srgb, ${COLOR.gray_10} 10%, transparent)`,
         ...(isHovered && isClickable ? { transform: "translateY(-2px)" } : {}),
       }}
       role={isClickable ? "button" : undefined}
@@ -122,7 +122,7 @@ export function PaperCard({ paper, onDelete, isDeleting }: PaperCardProps) {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: "rgba(255, 255, 255, 0.7)",
+            backgroundColor: `color-mix(in srgb, ${COLOR.gray_100} 70%, transparent)`,
             borderRadius: "12px",
             display: "flex",
             alignItems: "center",
@@ -143,7 +143,7 @@ export function PaperCard({ paper, onDelete, isDeleting }: PaperCardProps) {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: "rgba(255, 255, 255, 0.8)",
+            backgroundColor: `color-mix(in srgb, ${COLOR.gray_100} 80%, transparent)`,
             borderRadius: "12px",
             display: "flex",
             alignItems: "center",

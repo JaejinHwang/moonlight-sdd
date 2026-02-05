@@ -390,8 +390,8 @@ export function PdfOriginalViewer({
                     key={page}
                     ref={(el) => setPageRef(page, el)}
                     style={{
-                      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.3)",
-                      backgroundColor: "white",
+                      boxShadow: `0 2px 8px color-mix(in srgb, ${COLOR.gray_10} 30%, transparent)`,
+                      backgroundColor: COLOR.gray_100,
                     }}
                   >
                     <Page

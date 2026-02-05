@@ -1,0 +1,85 @@
+# ============================================================
+# Functional Specification (기능 명세)
+# Stage 4: 각 기능의 동작을 상세히 정의
+# ============================================================
+# 의존성: requirements.yaml의 user_stories 기반으로 작성
+# ============================================================
+
+functional_spec:
+  features:
+    - id: "F-001"
+      name: "{{feature_name}}"
+      description: "{{feature_description}}"
+      
+      # 이 기능이 구현하는 사용자 스토리
+      parent_story: "US-001"
+      
+      # 선행되어야 하는 다른 기능
+      dependencies: []  # 예: ["F-002", "F-003"]
+      
+      # 상태 다이어그램
+      # 이 기능이 가질 수 있는 모든 상태와 전이 조건
+      states:
+        - name: "idle"
+          description: "초기 상태"
+          transitions:
+            - trigger: "{{trigger_event}}"
+              target: "{{next_state}}"
+              condition: null  # 조건이 있으면 문자열로
+        - name: "{{state_2_name}}"
+          description: "{{state_2_description}}"
+          transitions:
+            - trigger: "{{trigger_event}}"
+              target: "{{next_state}}"
+              condition: "{{condition_if_any}}"
+      
+      # 입력 정의
+      inputs:
+        - name: "{{input_name}}"
+          type: "{{input_type}}"  # 예: "string", "File", "number"
+          validation: "{{validation_rules}}"  # 예: "max 50MB, PDF only"
+          required: true
+      
+      # 출력 정의
+      outputs:
+        - name: "{{output_name}}"
+          type: "{{output_type}}"
+          format: |
+            {
+              "field1": "type",
+              "field2": "type"
+            }
+      
+      # 에러 케이스 (필수!)
+      # 발생 가능한 모든 에러와 대응 방법
+      error_cases:
+        - condition: "{{error_condition}}"
+          error_code: "{{ERROR_CODE}}"
+          user_message: "{{user_friendly_message}}"
+          recovery_action: "{{what_user_can_do}}"
+      
+      # 엣지 케이스 (필수!)
+      # 경계 조건, 예외 상황
+      edge_cases:
+        - scenario: "{{edge_case_scenario}}"
+          expected_behavior: "{{how_system_should_respond}}"
+      
+      # 성능 요구사항 (해당 기능에 특화된)
+      performance:
+        - metric: "{{metric_name}}"
+          threshold: "{{threshold_value}}"
+
+    # 추가 기능 템플릿
+    # - id: "F-002"
+    #   name: "{{feature_name}}"
+    #   ...
+
+# ============================================================
+# 메타데이터
+# ============================================================
+metadata:
+  created_at: "{{created_at}}"
+  author: "{{author}}"
+  status: "draft"
+  depends_on:
+    - "../01-discovery/requirements.yaml"
